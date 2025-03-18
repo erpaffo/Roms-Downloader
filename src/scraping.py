@@ -52,6 +52,7 @@ def get_games_for_console(console_name):
         size_td = row.find('td', class_='size')
         size_text = size_td.text.strip() if size_td else "0 MB"
         size_bytes = parse_size_string(size_text)
+        # Aggiunta della chiave "console" per identificare la console corrente
         game = {
             'name': name,
             'link': full_link,
@@ -65,15 +66,14 @@ def get_games_for_console(console_name):
     logging.info(f"Scraping completato: trovati {len(games)} giochi")
     return games
 
-
 def get_games_for_console_cached(console_name):
     filename = f"cache_{console_name}.json"
-    games = None
     if os.path.exists(filename):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 games = json.load(f)
             logging.info(f"Cache caricata per console '{console_name}'")
+            # Assicurati che ogni gioco abbia il campo "console"
             for game in games:
                 if 'console' not in game:
                     game['console'] = console_name
@@ -88,4 +88,3 @@ def get_games_for_console_cached(console_name):
     except Exception as e:
         logging.error(f"Errore nel salvataggio della cache: {e}")
     return games
-
