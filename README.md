@@ -1,7 +1,3 @@
-Ecco un README dettagliato e ben strutturato che puoi utilizzare per il tuo progetto, tenendo conto delle informazioni estratte dai tuoi file. Copia questo testo nel file chiamato **README.md** presente nella directory radice del tuo progetto.
-
----
-
 # 🎮 ROMs Downloader - GUI Application
 
 **ROMs Downloader** è un'applicazione desktop realizzata in Python che permette di scaricare, gestire e avviare giochi per diverse console Nintendo direttamente dal desktop. Include funzionalità di scraping automatico, download concorrenti, gestione della coda di download, avvio rapido dei giochi con emulatori e gestione della libreria personale di giochi scaricati.
