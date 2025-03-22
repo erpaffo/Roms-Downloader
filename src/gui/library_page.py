@@ -5,14 +5,13 @@ from PySide6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QLabel, QMessageBox
 )
 from PySide6.QtCore import Qt
-from src.config import DOWNLOADS_FOLDER, EMULATOR_3DS, EMULATOR_NDS, EMULATOR_GBA, EMULATOR_GB
-from src.utils import extract_nations  # se la funzione extract_nations è definita in utils.py
-
+from src.config import DOWNLOADS_FOLDER, RETROARCH_NAME
+from src.utils import extract_nations  
 class LibraryPage(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Library - Giochi Installati")
-        self.library_files = []  # Lista dei giochi: tuple (nome, console, full_path)
+        self.library_files = []   
         self.init_ui()
         self.load_library()
 
@@ -54,7 +53,6 @@ class LibraryPage(QWidget):
         
         self.setLayout(layout)
         
-        # Stili personalizzati (tema scuro, elegante)
         self.setStyleSheet("""
             QWidget {
                 background-color: #2e2e2e;
@@ -81,10 +79,8 @@ class LibraryPage(QWidget):
             for file in files:
                 if file.lower().endswith((".3ds", ".nds", ".gba", ".gb")):
                     full_path = os.path.join(root, file)
-                    # Determina la console dal percorso:
                     norm_path = os.path.normpath(full_path)
                     parts = norm_path.split(os.sep)
-                    # Supponiamo che DOWNLOADS_FOLDER sia l'ultima cartella padre e la cartella successiva sia il nome della console
                     download_folder = os.path.basename(DOWNLOADS_FOLDER)
                     console = "Unknown"
                     try:
@@ -128,28 +124,18 @@ class LibraryPage(QWidget):
             self.table.insertRow(i)
             item_name = QTableWidgetItem(name)
             item_console = QTableWidgetItem(console)
-            # Salva il percorso completo nel dato utente per il lancio del gioco
             item_name.setData(Qt.UserRole, full_path)
             self.table.setItem(i, 0, item_name)
             self.table.setItem(i, 1, item_console)
 
+
     def launch_game(self, row, column):
-        """Al doppio clic, lancia il gioco con l'emulatore configurato."""
+        """
+        Al doppio clic, lancia la ROM con RetroArch.
+        """
         item = self.table.item(row, 0)
         full_path = item.data(Qt.UserRole)
-        console = self.table.item(row, 1).text().lower()
-        if console == "3ds":
-            emulator = EMULATOR_3DS
-        elif console == "nds":
-            emulator = EMULATOR_NDS
-        elif console == "gba":
-            emulator = EMULATOR_GBA
-        elif console == "gb":
-            emulator = EMULATOR_GB
-        else:
-            QMessageBox.warning(self, "Errore", "Nessun emulatore configurato per questa console.")
-            return
         try:
-            subprocess.Popen([emulator, full_path])
+            subprocess.Popen([RETROARCH_NAME, full_path])
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Impossibile avviare l'emulatore: {e}")
+            QMessageBox.critical(self, "Errore", f"Impossibile avviare RetroArch: {e}")

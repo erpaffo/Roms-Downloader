@@ -10,7 +10,6 @@ class DownloadQueueItemWidget(QWidget):
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
-        # Nuove etichette per le statistiche
         self.speed_label = QLabel("Velocità: 0.0 MB/s")
         self.peak_label = QLabel("Picco: 0.0 MB/s")
         layout.addWidget(self.label)

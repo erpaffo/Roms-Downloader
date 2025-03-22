@@ -1,26 +1,28 @@
 import os
+import subprocess
 import sys
 import weakref
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit,
     QTableWidget, QTableWidgetItem, QPushButton, QLabel,
     QPlainTextEdit, QListWidget, QListWidgetItem, QProgressBar,
-    QStackedWidget, QMessageBox, QSpinBox
+    QStackedWidget, QMessageBox, QSpinBox, QInputDialog
 )
 from PySide6.QtCore import Qt, QThread
 import logging
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QStackedWidget
 from src.gui.roms_page import RomsPage
-from src.config import CONSOLES, DOWNLOADS_FOLDER
+from src.config import CONSOLES, DOWNLOADS_FOLDER, RETROARCH_NAME
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
-from src.utils import extract_nations, launch_game, format_rate, format_space
+from src.utils import extract_nations, format_rate, format_space
+from src.gui.weight_item import WeightItem
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Game Manager - Like Steam")
+        self.setWindowTitle("Roms Downloader")
         self.setGeometry(100, 100, 1200, 800)
         
         self.games_list = []      # Giochi ottenuti dallo scraping
@@ -64,7 +66,7 @@ class MainWindow(QWidget):
         self.setLayout(main_layout)
         
         # Carica inizialmente i giochi per la console "3ds"
-        self.load_games("3ds")
+        self.load_games("Atari 2600")
     
     def init_download_manager_page(self):
         layout = QVBoxLayout()
@@ -82,6 +84,10 @@ class MainWindow(QWidget):
         self.search_bar.textChanged.connect(self.update_table)
         top_layout.addWidget(self.search_bar)
         
+        self.btn_filter_nation = QPushButton("Filtra Nazione")
+        self.btn_filter_nation.clicked.connect(self.filter_by_nation)
+        top_layout.addWidget(self.btn_filter_nation)
+
         top_layout.addWidget(QLabel("Max download concorrenti:"))
         self.concurrent_spin = QSpinBox()
         self.concurrent_spin.setMinimum(1)
@@ -193,22 +199,43 @@ class MainWindow(QWidget):
         self.load_library()
     
     def update_table(self):
-        search_text = self.search_bar.text().lower()
+        search_text = self.search_bar.text().lower().strip()
+        search_terms = search_text.split()
+        self.table.setSortingEnabled(False)
         self.table.setRowCount(0)
         for game in self.games_list:
-            if search_text and search_text not in game['name'].lower():
+            name_lower = game['name'].lower()
+            # Verifica che ogni termine di ricerca sia contenuto nel nome
+            if any(term not in name_lower for term in search_terms):
                 continue
+            # Se è attivo un filtro per nazione, controlla che la nazione selezionata sia presente
+            if hasattr(self, "selected_nation") and self.selected_nation:
+                nations_lower = [n.lower() for n in game.get("nations", [])]
+                if self.selected_nation not in nations_lower:
+                    continue
             row = self.table.rowCount()
             self.table.insertRow(row)
             item_name = QTableWidgetItem(game['name'])
-            item_size = QTableWidgetItem(game['size_str'])
+            from src.gui.weight_item import WeightItem  # Assicurati che l'import sia qui o in cima al file
+            item_size = WeightItem(game['size_str'])
             self.table.setItem(row, 0, item_name)
             self.table.setItem(row, 1, item_size)
-    
+        self.table.setSortingEnabled(True)
+
+    def filter_by_nation(self):
+        # Le nazioni consentite sono definite in ALLOWED_NATIONS (importabile da src/utils)
+        from src.utils import ALLOWED_NATIONS
+        nations = sorted(list(ALLOWED_NATIONS))
+        nation, ok = QInputDialog.getItem(self, "Filtra per Nazione", "Seleziona nazione:", nations, 0, False)
+        if ok and nation:
+            self.selected_nation = nation.lower()  # Salva la nazione selezionata in minuscolo
+        else:
+            self.selected_nation = ""
+        self.update_table()
+
     def on_table_double_click(self, row, column):
         game_name = self.table.item(row, 0).text()
         
-        # Verifica se il gioco è già presente nella libreria
         game_already_downloaded = False
         for file_path in self.library_files:
             base_name = os.path.splitext(os.path.basename(file_path))[0]
@@ -350,17 +377,16 @@ class MainWindow(QWidget):
     
     def launch_game_from_library(self, item, column):
         """
-        Se l'item selezionato è un file (foglia del QTreeWidget), tenta di lanciarlo
-        con l'emulatore corrispondente.
+        Se l'item selezionato è un file (foglia del QTreeWidget), lancia RetroArch con la ROM.
         """
         # Se l'item ha dei figli, si tratta di un gruppo, quindi non fare nulla.
         if item.childCount() > 0:
             return
         file_path = item.data(0, Qt.UserRole)
         try:
-            launch_game(file_path)
+            subprocess.Popen([RETROARCH_NAME, file_path])
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Impossibile avviare l'emulatore: {e}")
+            QMessageBox.critical(self, "Errore", f"Impossibile avviare RetroArch: {e}")
 
     def update_roms_current_download(self, game_name, downloaded, total, speed, remaining_time):
         # Calcola la percentuale di avanzamento

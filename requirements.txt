@@ -1,0 +1,3 @@
+PySide6
+BeautifulSoup4
+requests

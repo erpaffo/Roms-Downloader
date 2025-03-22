@@ -1,10 +1,10 @@
-# utils.py
 import re
 import zipfile
 import os
 import subprocess
 import shutil
-from src.config import EMULATOR_3DS_NAME, EMULATOR_NDS_NAME, EMULATOR_GBA_NAME, EMULATOR_GB_NAME
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMessageBox
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
 
@@ -47,26 +47,6 @@ def find_emulator_path(emulator_name):
     else:
         raise FileNotFoundError(f"Emulatore '{emulator_name}' non trovato nel PATH di sistema. "
                                 "Assicurati di averlo installato e che sia accessibile.")
-
-def launch_game(file_path):
-    """
-    Apre il file con l'emulatore appropriato in base all'estensione del file.
-    L'emulatore viene individuato cercando il suo percorso a partire dal nome configurato.
-    """
-    ext = os.path.splitext(file_path)[1].lower()
-    if ext == ".3ds":
-        emulator_name = EMULATOR_3DS_NAME
-    elif ext == ".nds":
-        emulator_name = EMULATOR_NDS_NAME
-    elif ext == ".gba":
-        emulator_name = EMULATOR_GBA_NAME
-    elif ext == ".gb":
-        emulator_name = EMULATOR_GB_NAME
-    else:
-        raise ValueError("Nessun emulatore configurato per questo tipo di file")
-    
-    emulator_path = find_emulator_path(emulator_name)
-    subprocess.Popen([emulator_path, file_path])
 
 def format_rate(rate):
     """
