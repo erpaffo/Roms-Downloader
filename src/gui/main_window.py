@@ -1,18 +1,18 @@
 import os
 import subprocess
 import sys
-import weakref
+import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit,
     QTableWidget, QTableWidgetItem, QPushButton, QLabel,
-    QPlainTextEdit, QListWidget, QListWidgetItem, QProgressBar,
-    QStackedWidget, QMessageBox, QSpinBox, QInputDialog
+    QPlainTextEdit, QTreeWidget, QListWidget, QListWidgetItem, QProgressBar,
+    QStackedWidget, QMessageBox, QSpinBox, QInputDialog, QSystemTrayIcon
 )
 from PySide6.QtCore import Qt, QThread
-import logging
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QStackedWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QFileDialog
 from src.gui.roms_page import RomsPage
-from src.config import CONSOLES, DOWNLOADS_FOLDER, RETROARCH_NAME
+from src.config import CONSOLES, USER_DOWNLOADS_FOLDER, RETROARCH_NAME, set_user_download_folder
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
@@ -88,12 +88,18 @@ class MainWindow(QWidget):
         self.btn_filter_nation.clicked.connect(self.filter_by_nation)
         top_layout.addWidget(self.btn_filter_nation)
 
+        # Aggiungi il pulsante "Seleziona Cartella Download" al top_layout
+        self.btn_select_download_folder = QPushButton("Seleziona Cartella Download")
+        self.btn_select_download_folder.clicked.connect(self.select_download_folder)
+        top_layout.addWidget(self.btn_select_download_folder)
+        
         top_layout.addWidget(QLabel("Max download concorrenti:"))
         self.concurrent_spin = QSpinBox()
         self.concurrent_spin.setMinimum(1)
         self.concurrent_spin.setMaximum(10)
         self.concurrent_spin.setValue(2)
         top_layout.addWidget(self.concurrent_spin)
+        
         layout.addLayout(top_layout)
         
         # Tabella dei giochi disponibili (risultati dello scraping)
@@ -150,25 +156,44 @@ class MainWindow(QWidget):
         self.download_manager_page.setLayout(layout)
     
     def init_library_page(self):
-        from PySide6.QtWidgets import QTreeWidget
         layout = QVBoxLayout()
         
-        # Barra superiore con titolo e pulsante Refresh
+        # Barra superiore con titolo, label del percorso e pulsante Refresh
         top_layout = QHBoxLayout()
         top_layout.addWidget(QLabel("Library - Giochi Scaricati"))
+        
+        # Aggiungiamo una label per mostrare la cartella corrente
+        from src.config import USER_DOWNLOADS_FOLDER
+        self.current_folder_label = QLabel(f"Cartella: {USER_DOWNLOADS_FOLDER}")
+        top_layout.addWidget(self.current_folder_label)
+        
         self.refresh_library_btn = QPushButton("Refresh")
-        self.refresh_library_btn.clicked.connect(self.load_library)
+        self.refresh_library_btn.clicked.connect(self.refresh_library)
         top_layout.addWidget(self.refresh_library_btn)
         layout.addLayout(top_layout)
         
-        # Utilizziamo un QTreeWidget per raggruppare i giochi per console
+        # QTreeWidget per raggruppare i giochi per console
         self.library_tree_widget = QTreeWidget()
         self.library_tree_widget.setHeaderLabels(["Nome Gioco", "Dimensione"])
-        self.library_tree_widget.itemDoubleClicked.connect(self.launch_game_from_library)
+        #self.library_tree_widget.itemDoubleClicked.connect(self.library_page.launch_game_from_library)
         layout.addWidget(self.library_tree_widget)
         
         self.library_page.setLayout(layout)
-    
+
+    def refresh_library(self):
+        from src.config import USER_DOWNLOADS_FOLDER
+        # Aggiorna la label per mostrare il percorso corrente
+        self.current_folder_label.setText(f"Cartella: {USER_DOWNLOADS_FOLDER}")
+        self.log(f"Ricarico la libreria per la cartella: {USER_DOWNLOADS_FOLDER}")
+        self.load_library()
+
+    def select_download_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Seleziona cartella download", USER_DOWNLOADS_FOLDER)
+        if folder:
+            set_user_download_folder(folder)
+            self.log(f"Cartella download impostata su: {folder}")
+            self.load_library()
+
     def log(self, message):
         logging.info(message)
         self.log_area.appendPlainText(message)
@@ -308,16 +333,18 @@ class MainWindow(QWidget):
             self.log("Nessun download in coda.")
             return
 
+        self.waiting_queue_list.clear()  # Svuota il QListWidget (coda visiva)
+        
         self.log("Avvio coda download...")
         self.download_manager_thread = QThread()
         max_concurrent = self.concurrent_spin.value()
+        # Passa la coda (che ora è vuota) al DownloadManager
         self.download_manager_worker = DownloadManager(
             self.download_queue,
-            lambda: self.update_waiting_queue_list(),
+            lambda: self.update_waiting_queue_list(),  # Assicurati che questo callback non ripopolizzi la coda se vuota
             max_concurrent
         )
 
-        # Connessioni fondamentali (verifica bene questa connessione):
         self.download_manager_worker.file_progress.connect(self.update_roms_active_download)
         self.download_manager_worker.file_finished.connect(self.on_download_finished_roms)
 
@@ -329,6 +356,8 @@ class MainWindow(QWidget):
         self.download_manager_thread.finished.connect(self.download_manager_thread.deleteLater)
         self.download_manager_thread.start()
 
+        self.download_queue.clear()      # Rimuove tutti i giochi dalla coda interna
+
     def cancel_downloads(self):
         if self.download_manager_worker:
             self.download_manager_worker.cancel_all()
@@ -336,33 +365,34 @@ class MainWindow(QWidget):
     
     def load_library(self):
         """
-        Scansiona ricorsivamente la cartella DOWNLOADS_FOLDER per trovare i giochi,
-        li raggruppa per console e li visualizza nel QTreeWidget.
+        Scansiona ricorsivamente la cartella impostata (USER_DOWNLOADS_FOLDER)
+        per trovare i giochi. Viene analizzata ogni sottocartella e
+        si considerano tutti i file (ad es. con os.path.isfile).
+        I giochi vengono raggruppati per cartella (che in questo caso
+        può essere il nome della console o un'altra suddivisione).
         """
         self.library_tree_widget.clear()
         self.library_files = []
         files_by_console = {}
-        for root, dirs, files in os.walk(DOWNLOADS_FOLDER):
+        
+        for root, dirs, files in os.walk(USER_DOWNLOADS_FOLDER):
             for file in files:
-                if file.lower().endswith((".3ds", ".nds", ".gba", ".gb")):
-                    full_path = os.path.join(root, file)
-                    self.library_files.append(full_path)
-                    # Determina la console: si assume la struttura DOWNLOADS_FOLDER/<console>/<file>
-                    norm_path = os.path.normpath(full_path)
-                    parts = norm_path.split(os.sep)
-                    console = "Unknown"
-                    try:
-                        download_folder = os.path.basename(DOWNLOADS_FOLDER)
-                        index = parts.index(download_folder)
-                        if len(parts) > index + 1:
-                            console = parts[index + 1]
-                    except ValueError:
-                        console = "Unknown"
-                    if console not in files_by_console:
-                        files_by_console[console] = []
-                    # Ottieni la dimensione del file e formattala (usando format_space)
-                    size = os.path.getsize(full_path)
-                    files_by_console[console].append((file, size, full_path))
+                full_path = os.path.join(root, file)
+                # Considera solo file regolari (puoi aggiungere ulteriori controlli se serve)
+                if not os.path.isfile(full_path):
+                    continue
+                self.library_files.append(full_path)
+                
+                # Usa come "console" la prima sottocartella rispetto a USER_DOWNLOADS_FOLDER
+                relative_path = os.path.relpath(full_path, USER_DOWNLOADS_FOLDER)
+                parts = relative_path.split(os.sep)
+                # Se c'è almeno una sottocartella, usala come gruppo; altrimenti "Root"
+                console = parts[0] if len(parts) > 1 else "Root"
+                
+                if console not in files_by_console:
+                    files_by_console[console] = []
+                size = os.path.getsize(full_path)
+                files_by_console[console].append((file, size, full_path))
         
         from PySide6.QtWidgets import QTreeWidgetItem
         for console, games in files_by_console.items():
@@ -374,7 +404,6 @@ class MainWindow(QWidget):
                 top_item.addChild(child_item)
             self.library_tree_widget.addTopLevelItem(top_item)
 
-    
     def launch_game_from_library(self, item, column):
         """
         Se l'item selezionato è un file (foglia del QTreeWidget), lancia RetroArch con la ROM.

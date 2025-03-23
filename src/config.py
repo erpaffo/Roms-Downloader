@@ -1,5 +1,6 @@
 import logging
 import os
+from PySide6.QtCore import QSettings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,10 +29,27 @@ CONSOLES = {
     "Sony PlayStation Portable": "Redump/Sony%20-%20PlayStation%20Portable/"
 }
 
-DOWNLOADS_FOLDER = os.path.join(os.getcwd(), "downloads")
-
 RETROARCH_NAME = r"C:\RetroArch-Win64\retroarch.exe"
 
 CACHE_FOLDER = os.path.join(os.getcwd(), "cache")
 if not os.path.exists(CACHE_FOLDER):
     os.makedirs(CACHE_FOLDER)
+
+SETTINGS_ORG = "MyCompany"
+SETTINGS_APP = "RomsDownloader"
+settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
+
+# Se l'utente non ha già impostato la cartella, usa un default
+DEFAULT_DOWNLOADS_FOLDER = os.path.join(os.getcwd(), "downloads")
+USER_DOWNLOADS_FOLDER = settings.value("download_folder", DEFAULT_DOWNLOADS_FOLDER)
+
+# Assicurati che la cartella esista
+if not os.path.exists(USER_DOWNLOADS_FOLDER):
+    os.makedirs(USER_DOWNLOADS_FOLDER)
+
+def set_user_download_folder(new_path):
+    global USER_DOWNLOADS_FOLDER
+    USER_DOWNLOADS_FOLDER = new_path
+    if not os.path.exists(USER_DOWNLOADS_FOLDER):
+        os.makedirs(USER_DOWNLOADS_FOLDER)
+    settings.setValue("download_folder", USER_DOWNLOADS_FOLDER)

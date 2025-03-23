@@ -1,4 +1,10 @@
 downloads/
 src/__pycache__/
 cache/
+romsdownloader_deb/
+venv/
+dist/
+build/
 setup_script.iss
+cache
+app_icon.*

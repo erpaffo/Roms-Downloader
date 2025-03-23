@@ -2,8 +2,10 @@ import os
 import time
 import requests
 from PySide6.QtCore import QObject, Signal
-from src.config import DOWNLOADS_FOLDER
-from src.utils import extract_zip
+
+from src.utils import extract_zip    
+from src.config import USER_DOWNLOADS_FOLDER
+
 
 class DownloadWorker(QObject):
     # Ora il segnale emette: (game_name, downloaded_bytes, total_bytes, speed (B/s), remaining_time (sec))
@@ -15,25 +17,25 @@ class DownloadWorker(QObject):
         super().__init__()
         self.game = game
         self.cancelled = False
-    
+
     def run(self):
         url = self.game['link']
         filename = os.path.basename(url)
         console_folder = self.game.get('console', 'default')
-        destination_dir = os.path.join(DOWNLOADS_FOLDER, console_folder)
+        destination_dir = os.path.join(USER_DOWNLOADS_FOLDER, console_folder)
         os.makedirs(destination_dir, exist_ok=True)
         local_file = os.path.join(destination_dir, filename)
         self.log.emit(f"Inizio download: {filename} in {destination_dir}")
-        
+
         try:
             total = 0
             downloaded = 0
-            chunk_size = 1024 * 64  # 64 KB per un calcolo più accurato della velocità
+            chunk_size = 1024 * 64
             start_time = time.time()
             last_update_time = start_time
             last_downloaded = 0
-            speed = 0  # Velocità iniziale
-            
+            speed = 0
+
             with requests.get(url, stream=True) as response:
                 response.raise_for_status()
                 total = int(response.headers.get('Content-Length', 0))
@@ -48,16 +50,14 @@ class DownloadWorker(QObject):
                             f.write(chunk)
                             downloaded += len(chunk)
                             current_time = time.time()
-                            
-                            # Aggiorna la velocità ogni 0.5 secondi per evitare velocità istantanee troppo brevi
+
                             if current_time - last_update_time >= 0.5:
                                 interval = current_time - last_update_time
                                 bytes_interval = downloaded - last_downloaded
-                                speed = bytes_interval / interval  # byte/sec
-                                
+                                speed = bytes_interval / interval
+
                                 remaining_time = (total - downloaded) / speed if speed > 0 else -1
 
-                                # Emette il progresso aggiornato
                                 self.progress_update.emit(
                                     self.game['name'],
                                     downloaded,
@@ -69,7 +69,6 @@ class DownloadWorker(QObject):
                                 last_update_time = current_time
                                 last_downloaded = downloaded
 
-            # Emette l'ultimo aggiornamento alla fine del download
             total_time = time.time() - start_time
             final_speed = downloaded / total_time if total_time > 0 else 0
             self.progress_update.emit(
