@@ -9,8 +9,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
+from src.gui.emulator_settings_dialog import EmulatorSettingsDialog
 from src.gui.roms_page import RomsPage
-from src.config import CONSOLES, USER_DOWNLOADS_FOLDER, RETROARCH_NAME, set_user_download_folder, set_max_concurrent_downloads, settings, DEFAULT_DOWNLOADS_FOLDER,  MAX_CONCURRENT_DOWNLOADS
+from src.config import CONSOLES, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, USER_DOWNLOADS_FOLDER, RETROARCH_NAME, set_user_download_folder, set_max_concurrent_downloads, settings, DEFAULT_DOWNLOADS_FOLDER,  MAX_CONCURRENT_DOWNLOADS
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
@@ -55,7 +56,15 @@ class MainWindow(QWidget):
         settings_action = QAction("Opzioni", self)
         settings_action.triggered.connect(self.show_settings_dialog)
         settings_menu.addAction(settings_action)
-        # Creazione dell'header con i pulsanti di navigazione
+    
+        emulator_menu = QMenu("Emulator", self)
+        menu_bar.addMenu(emulator_menu)
+        # Per ogni core in DEFAULT_CORES, aggiungi un'azione per aprire il dialogo di impostazioni
+        for core_name, core_file in DEFAULT_CORES.items():
+            action = QAction(core_name, self)
+            action.triggered.connect(lambda checked, core=core_name, file=core_file: self.open_emulator_settings(core, file))
+            emulator_menu.addAction(action)
+
         main_layout = QVBoxLayout()
         main_layout.setMenuBar(menu_bar)
 
@@ -463,3 +472,17 @@ class MainWindow(QWidget):
             self.library_page.load_library()
 
 
+    def open_emulator_settings(self, core_name, core_file):
+        """
+        Apre il dialogo per modificare le impostazioni del core specifico.
+        Il file di configurazione è individuato in EMULATOR_CONFIG_FOLDER.
+        Se core_file non termina con ".cfg", l'estensione viene aggiunta.
+        """
+        if not core_file.endswith(".cfg"):
+            config_filename = core_file + ".cfg"
+        else:
+            config_filename = core_file
+        config_path = os.path.join(EMULATOR_CONFIG_FOLDER, config_filename)
+        dialog = EmulatorSettingsDialog(core_name, config_path, self)
+        if dialog.exec():
+            self.log(f"Impostazioni per {core_name} aggiornate. Config file: {dialog.get_config_path()}")

@@ -33,21 +33,19 @@ CONSOLES = {
     "Sony PlayStation Portable": "Redump/Sony%20-%20PlayStation%20Portable/"
 }
 
-# Percorso dell'eseguibile di RetroArch (l'utente potrà modificarlo via Settings se necessario)
+# Percorso dell'eseguibile di RetroArch (l'utente potrà modificarlo via Settings)
 RETROARCH_NAME = r"C:\RetroArch-Win64\retroarch.exe"
 
-# Cartella per i core (tutti i core sono stati scaricati manualmente e sono collocati qui)
-CORES_FOLDER = os.path.join(os.getcwd(), "emulator/cores")
+# Cartella in cui sono contenuti i core
+CORES_FOLDER = os.path.join(os.getcwd(), "emulator", "cores")
 if not os.path.exists(CORES_FOLDER):
     os.makedirs(CORES_FOLDER)
 
-# Mappa dei core di default: per ogni console il nome del file del core (che deve trovarsi in CORES_FOLDER)
+# Mappa dei core di default: per ogni console il nome del file del core (il file deve trovarsi in CORES_FOLDER)
 DEFAULT_CORES = {
     "Atari 2600": "stella2023_libretro.so",
     "Atari 5200": "a5200_libretro.so",
     "Atari 7800": "prosystem_libretro.so",
-    "Microsoft Xbox": "xemu_libretro.so",  # non presente nei tuoi cores attuali, sarebbe da aggiungere
-    "Microsoft Xbox 360": "xenia_libretro.so",  # non presente nei tuoi cores attuali, sarebbe da aggiungere
     "Nintendo GameBoy": "gambatte_libretro.so",
     "Nintendo GameBoy Advance": "mgba_libretro.so",
     "Nintendo GameBoy Color": "gambatte_libretro.so",
@@ -56,19 +54,23 @@ DEFAULT_CORES = {
     "Nintendo 64": "mupen64plus_next_libretro.so",
     "Nintendo GameCube": "dolphin_libretro.so",
     "Nintendo Wii": "dolphin_libretro.so",
-    "Nintendo Wii U": "cemu_libretro.so",  # non presente nei tuoi cores attuali, sarebbe da aggiungere
     "Sony PlayStation": "pcsx_rearmed_libretro.so",
     "Sony PlayStation 2": "pcsx2_libretro.so",
-    "Sony PlayStation 3": "rpcs3_libretro.so",  # non presente nei tuoi cores attuali, sarebbe da aggiungere
+    "Sony PlayStation 3": "rpcs3_libretro.so",
     "Sony PlayStation Portable": "ppsspp_libretro.so"
 }
+
+# Cartella per i file di configurazione degli emulatori (es. RetroArch per ogni core)
+EMULATOR_CONFIG_FOLDER = os.path.join(os.getcwd(), "emulator", "config")
+if not os.path.exists(EMULATOR_CONFIG_FOLDER):
+    os.makedirs(EMULATOR_CONFIG_FOLDER)
 
 # Cartella per la cache
 CACHE_FOLDER = os.path.join(os.getcwd(), "cache")
 if not os.path.exists(CACHE_FOLDER):
     os.makedirs(CACHE_FOLDER)
 
-# Configurazione persistente con QSettings
+# Configurazione persistente tramite QSettings
 SETTINGS_ORG = "MyCompany"
 SETTINGS_APP = "RomsDownloader"
 settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
@@ -102,4 +104,3 @@ def add_console(name, link):
     'name' è il titolo visualizzato e 'link' è il percorso relativo usato per lo scraping.
     """
     CONSOLES[name] = link
-    # Puoi salvare anche questa impostazione in QSettings se lo desideri.
