@@ -1,6 +1,6 @@
 import os
 import subprocess
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QHeaderView ,QTreeWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
 from src.config import RETROARCH_NAME, CORES_FOLDER, DEFAULT_CORES
 from src.utils import format_space, find_retroarch
@@ -28,6 +28,7 @@ class LibraryPage(QWidget):
         # QTreeWidget per visualizzare la libreria
         self.library_tree_widget = QTreeWidget()
         self.library_tree_widget.setHeaderLabels(["Nome Gioco", "Dimensione"])
+        self.library_tree_widget.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.library_tree_widget.itemDoubleClicked.connect(self.launch_game_from_library)
         layout.addWidget(self.library_tree_widget)
         

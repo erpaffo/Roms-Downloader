@@ -7,6 +7,7 @@ USEFUL_OPTIONS = ["video_scale", "audio_volume", "input_driver", "input_player1_
                   "input_player1_select", "input_player1_up", "input_player1_down", "input_player1_left",
                   "input_player1_right", "input_player1_l", "input_player1_r"]
 
+# TODO Implementare opzioni utili per i core più comuni
 COMMON_ALLOCATED_OPTIONS = [
     "input_driver", "audio_driver", "video_aspect_ratio", "video_fullscreen",
     "video_vsync", "menu_font_color_red", "menu_font_color_green", "menu_font_color_blue"

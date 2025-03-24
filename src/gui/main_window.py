@@ -1,7 +1,7 @@
 import os
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit,
+    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QHeaderView,
     QTableWidget, QTableWidgetItem, QPushButton, QLabel, QTreeWidgetItem,
     QPlainTextEdit, QTreeWidget, QListWidget, QListWidgetItem, QProgressBar,
     QStackedWidget, QMessageBox, QSpinBox, QInputDialog, QSystemTrayIcon, QMenuBar, QMenu
@@ -112,11 +112,13 @@ class MainWindow(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Nome Gioco", "Peso"])
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Adatta automaticamente "Nome Gioco"
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.cellDoubleClicked.connect(self.on_table_double_click)
         layout.addWidget(self.table)
+
         
         # Lista di attesa: mostra i giochi in download che non sono ancora stati avviati
         waiting_layout = QVBoxLayout()
