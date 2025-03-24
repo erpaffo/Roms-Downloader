@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit,
@@ -12,13 +10,14 @@ from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
 from src.gui.roms_page import RomsPage
-from src.config import CONSOLES, USER_DOWNLOADS_FOLDER, RETROARCH_NAME, set_user_download_folder, settings, DEFAULT_DOWNLOADS_FOLDER
+from src.config import CONSOLES, USER_DOWNLOADS_FOLDER, RETROARCH_NAME, set_user_download_folder, set_max_concurrent_downloads, settings, DEFAULT_DOWNLOADS_FOLDER,  MAX_CONCURRENT_DOWNLOADS
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
-from src.utils import extract_nations, format_rate, format_space
+from src.utils import extract_nations, format_rate, format_space, ALLOWED_NATIONS
 from src.gui.settings_dialog import SettingsDialog
 from src.gui.library_page import LibraryPage
+from src.gui.weight_item import WeightItem
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -207,7 +206,6 @@ class MainWindow(QWidget):
             row = self.table.rowCount()
             self.table.insertRow(row)
             item_name = QTableWidgetItem(game['name'])
-            from src.gui.weight_item import WeightItem  # Assicurati che l'import sia qui o in cima al file
             item_size = WeightItem(game['size_str'])
             self.table.setItem(row, 0, item_name)
             self.table.setItem(row, 1, item_size)
@@ -215,7 +213,6 @@ class MainWindow(QWidget):
 
     def filter_by_nation(self):
         # Le nazioni consentite sono definite in ALLOWED_NATIONS (importabile da src/utils)
-        from src.utils import ALLOWED_NATIONS
         nations = sorted(list(ALLOWED_NATIONS))
         nation, ok = QInputDialog.getItem(self, "Filtra per Nazione", "Seleziona nazione:", nations, 0, False)
         if ok and nation:
@@ -305,7 +302,6 @@ class MainWindow(QWidget):
         self.log("Avvio coda download...")
         self.download_manager_thread = QThread()
         # Leggi il valore aggiornato dalle impostazioni
-        from src.config import MAX_CONCURRENT_DOWNLOADS
         max_concurrent = MAX_CONCURRENT_DOWNLOADS
 
         # Crea il DownloadManager con la coda attuale e il numero massimo di download concorrenti
@@ -460,18 +456,10 @@ class MainWindow(QWidget):
         if dialog.exec():
             # Se l'utente ha premuto OK, aggiorna le impostazioni
             values = dialog.get_values()
-            from src.config import set_user_download_folder, set_max_concurrent_downloads
             set_user_download_folder(values["download_folder"])
             set_max_concurrent_downloads(values["max_dl"])
             self.log(f"Impostazioni aggiornate: {values}")
             # Aggiorna la libreria con il nuovo percorso (se necessario)
             self.library_page.load_library()
 
-if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication
-    import sys
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
 
