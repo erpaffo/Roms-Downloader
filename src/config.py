@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from PySide6.QtCore import QSettings
 
 # Configurazione di base del logging
@@ -36,8 +37,16 @@ CONSOLES = {
 # Percorso dell'eseguibile di RetroArch (l'utente potrà modificarlo via Settings)
 RETROARCH_NAME = r"C:\RetroArch-Win64\retroarch.exe"
 
+def resource_path(relative_path):
+    """Restituisce il percorso assoluto della risorsa, funzionante sia in sviluppo sia in bundle."""
+    try:
+        base_path = sys._MEIPASS  # usato da PyInstaller
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 # Cartella in cui sono contenuti i core
-CORES_FOLDER = os.path.join(os.getcwd(), "emulator", "cores")
+CORES_FOLDER = resource_path(os.path.join("emulator", "cores"))
 if not os.path.exists(CORES_FOLDER):
     os.makedirs(CORES_FOLDER)
 
@@ -61,7 +70,7 @@ DEFAULT_CORES = {
 }
 
 # Cartella per i file di configurazione degli emulatori (es. RetroArch per ogni core)
-EMULATOR_CONFIG_FOLDER = os.path.join(os.getcwd(), "emulator", "config")
+EMULATOR_CONFIG_FOLDER = resource_path(os.path.join("emulator", "config"))
 if not os.path.exists(EMULATOR_CONFIG_FOLDER):
     os.makedirs(EMULATOR_CONFIG_FOLDER)
 
@@ -104,3 +113,4 @@ def add_console(name, link):
     'name' è il titolo visualizzato e 'link' è il percorso relativo usato per lo scraping.
     """
     CONSOLES[name] = link
+
