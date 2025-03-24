@@ -8,3 +8,6 @@ build/
 setup_script.iss
 cache
 app_icon.*
+CREATE_APP.md
+ROMsDownloader.spec
+emulator/

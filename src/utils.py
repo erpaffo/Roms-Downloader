@@ -1,6 +1,7 @@
 import re
 import zipfile
 import os
+import sys
 import subprocess
 import shutil
 from PySide6.QtCore import Qt
@@ -67,3 +68,22 @@ def format_space(bytes_value):
         return f"{bytes_value/1024:.1f} KB"
     else:
         return f"{bytes_value/(1024*1024):.1f} MB"
+
+def find_retroarch():
+    """Cerca l'eseguibile di RetroArch sul sistema."""
+    path = shutil.which("retroarch")
+    if path:
+        return path
+
+    if sys.platform.startswith("win"):
+        possible = [r"C:\RetroArch-Win64\retroarch.exe", r"C:\Program Files\RetroArch\retroarch.exe"]
+    elif sys.platform.startswith("linux"):
+        possible = ["/home/erpaffo/Scrivania/Roms-Downloader/emulator/retroarch", "/usr/bin/retroarch", "/usr/local/bin/retroarch"]
+    elif sys.platform.startswith("darwin"):
+        possible = ["/Applications/RetroArch.app/Contents/MacOS/retroarch"]
+    else:
+        possible = []
+    for p in possible:
+        if os.path.exists(p):
+            return p
+    return None
