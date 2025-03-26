@@ -2,8 +2,8 @@ import os
 import subprocess
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QHeaderView ,QTreeWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
-from src.config import RETROARCH_NAME, CORES_FOLDER, DEFAULT_CORES
-from src.utils import format_space, find_retroarch
+from src.utils import download_and_extract_core, format_space, find_retroarch, download_and_install_retroarch
+from src.config import USER_DOWNLOADS_FOLDER, settings, DEFAULT_DOWNLOADS_FOLDER, CORES_FOLDER, DEFAULT_CORES, CORE_EXT
 
 class LibraryPage(QWidget):
     def __init__(self, parent=None):
@@ -17,7 +17,7 @@ class LibraryPage(QWidget):
         # Barra superiore: titolo, percorso e pulsante Refresh
         top_layout = QHBoxLayout()
         top_layout.addWidget(QLabel("Library - Giochi Scaricati"))
-        from src.config import USER_DOWNLOADS_FOLDER
+
         self.current_folder_label = QLabel(f"Cartella: {USER_DOWNLOADS_FOLDER}")
         top_layout.addWidget(self.current_folder_label)
         self.refresh_library_btn = QPushButton("Refresh")
@@ -35,7 +35,6 @@ class LibraryPage(QWidget):
         self.setLayout(layout)
 
     def load_library(self):
-        from src.config import settings, DEFAULT_DOWNLOADS_FOLDER
         current_folder = settings.value("download_folder", DEFAULT_DOWNLOADS_FOLDER)
         self.current_folder_label.setText(f"Cartella: {current_folder}")
         self.library_tree_widget.clear()
@@ -72,44 +71,38 @@ class LibraryPage(QWidget):
         self.load_library()
 
     def launch_game_from_library(self, item, column):
-        """
-        Al doppio clic su una ROM (foglia) lancia RetroArch con il core appropriato 
-        e la configurazione personalizzata.
-        Se RetroArch non è installato o il core non viene trovato, notifica l'utente.
-        """
         if item.childCount() > 0:
             return
         rom_path = item.data(0, Qt.UserRole)
         parent_item = item.parent()
-        if parent_item:
-            console_name = parent_item.text(0)
-        else:
-            console_name = "Root"
+        console_name = parent_item.text(0) if parent_item else "Root"
 
-        # Cerca l'eseguibile di RetroArch
+        # 1. Verifica RetroArch
         retroarch_exe = find_retroarch()
         if not retroarch_exe:
-            QMessageBox.critical(self, "Errore", "RetroArch non è installato. È necessario installarlo per avviare le ROM.")
+            QMessageBox.critical(self, "Errore", "RetroArch non è installato. Visita https://www.retroarch.com/ per scaricarlo.")
             return
 
-        # Usa DEFAULT_CORES per ottenere il nome del core
-        from src.config import DEFAULT_CORES, CORES_FOLDER
-        core_filename = DEFAULT_CORES.get(console_name)
-        if not core_filename:
+        # 2. Verifica che il core per la console esista.
+        core_base = DEFAULT_CORES.get(console_name)
+        if not core_base:
             QMessageBox.critical(self, "Errore", f"Nessun core configurato per la console '{console_name}'.")
             return
 
+        core_filename = core_base + CORE_EXT
         core_path = os.path.join(CORES_FOLDER, core_filename)
         if not os.path.exists(core_path):
-            QMessageBox.critical(self, "Errore", f"Il core per '{console_name}' non è stato trovato in '{CORES_FOLDER}'.")
-            return
+            # Se non esiste, prova a scaricarlo ed estrarlo
+            self.parent().log(f"Core per '{console_name}' non trovato. Scaricamento in corso...")
+            core_path = download_and_extract_core(core_base)
+            if not core_path:
+                QMessageBox.critical(self, "Errore", f"Impossibile scaricare il core per '{console_name}'.")
+                return
 
-        # Costruisci il percorso del file di configurazione personalizzato
+        # 3. Costruisci il comando per avviare RetroArch
         config_folder = os.path.join("emulator", "config")
         config_filename = core_filename + ".cfg"
         config_path = os.path.join(config_folder, config_filename)
-        
-        # Se il file di configurazione esiste, aggiungi l'opzione --config
         if os.path.exists(config_path):
             command = [retroarch_exe, "--config", config_path, "-L", core_path, rom_path]
         else:

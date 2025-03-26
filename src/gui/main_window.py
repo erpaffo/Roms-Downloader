@@ -11,7 +11,7 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
 from src.gui.emulator_settings_dialog import EmulatorSettingsDialog
 from src.gui.roms_page import RomsPage
-from src.config import CONSOLES, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, USER_DOWNLOADS_FOLDER, RETROARCH_NAME, set_user_download_folder, set_max_concurrent_downloads, settings, DEFAULT_DOWNLOADS_FOLDER,  MAX_CONCURRENT_DOWNLOADS
+from src.config import CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, USER_DOWNLOADS_FOLDER, set_user_download_folder, set_max_concurrent_downloads, settings, DEFAULT_DOWNLOADS_FOLDER,  MAX_CONCURRENT_DOWNLOADS
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
@@ -62,7 +62,7 @@ class MainWindow(QWidget):
         # Per ogni core in DEFAULT_CORES, aggiungi un'azione per aprire il dialogo di impostazioni
         for core_name, core_file in DEFAULT_CORES.items():
             action = QAction(core_name, self)
-            action.triggered.connect(lambda checked, core=core_name, file=core_file: self.open_emulator_settings(core, file))
+            action.triggered.connect(lambda checked, core=core_name, file=core_file: self.open_emulator_settings(core + CORE_EXT, file))
             emulator_menu.addAction(action)
 
         main_layout = QVBoxLayout()
@@ -499,7 +499,7 @@ class MainWindow(QWidget):
         Se core_file non termina con ".cfg", l'estensione viene aggiunta.
         """
         if not core_file.endswith(".cfg"):
-            config_filename = core_file + ".cfg"
+            config_filename = core_file + CORE_EXT + ".cfg"
         else:
             config_filename = core_file
         config_path = os.path.join(EMULATOR_CONFIG_FOLDER, config_filename)

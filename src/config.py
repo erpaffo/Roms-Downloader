@@ -9,6 +9,17 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# Configurazione persistente tramite QSettings
+SETTINGS_ORG = "MyCompany"
+SETTINGS_APP = "RomsDownloader"
+settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
+
+# Percorso di default per i download (e la libreria)
+DEFAULT_DOWNLOADS_FOLDER = os.path.join(os.getcwd(), "downloads")
+USER_DOWNLOADS_FOLDER = settings.value("download_folder", DEFAULT_DOWNLOADS_FOLDER)
+if not os.path.exists(USER_DOWNLOADS_FOLDER):
+    os.makedirs(USER_DOWNLOADS_FOLDER)
+
 # URL base per lo scraping
 BASE_URL = "https://myrient.erista.me/files/"
 
@@ -34,40 +45,72 @@ CONSOLES = {
     "Sony PlayStation Portable": "Redump/Sony%20-%20PlayStation%20Portable/"
 }
 
-# Percorso dell'eseguibile di RetroArch (l'utente potrà modificarlo via Settings)
-RETROARCH_NAME = r"C:\RetroArch-Win64\retroarch.exe"
+# Imposta CORE_EXT e il base URL per i nightly build in base al sistema operativo
+if sys.platform.startswith("win"):
+    CORE_EXT = ".dll"
+    NIGHTLY_URL = "https://buildbot.libretro.com/nightly/windows/x86_64/latest/"
+elif sys.platform.startswith("linux"):
+    CORE_EXT = ".so"
+    NIGHTLY_URL = "https://buildbot.libretro.com/nightly/linux/x86_64/latest/"
+elif sys.platform.startswith("darwin"):
+    CORE_EXT = ".dylib"
+    # Per macOS, puoi decidere in base all'architettura: per ora assumiamo intel:
+    NIGHTLY_URL = "https://buildbot.libretro.com/nightly/apple/osx/x86_64/latest/"
+else:
+    CORE_EXT = ".so"
+    NIGHTLY_URL = ""
 
+# Funzione helper per le risorse (utile con PyInstaller)
 def resource_path(relative_path):
-    """Restituisce il percorso assoluto della risorsa, funzionante sia in sviluppo sia in bundle."""
     try:
-        base_path = sys._MEIPASS  # usato da PyInstaller
+        base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# Cartella in cui sono contenuti i core
+# Cartella dei core
 CORES_FOLDER = resource_path(os.path.join("emulator", "cores"))
 if not os.path.exists(CORES_FOLDER):
     os.makedirs(CORES_FOLDER)
 
-# Mappa dei core di default: per ogni console il nome del file del core (il file deve trovarsi in CORES_FOLDER)
+# Mappa dei core di default: per ogni console, il nome base del core (senza estensione)
 DEFAULT_CORES = {
-    "Atari 2600": "stella2023_libretro.so",
-    "Atari 5200": "a5200_libretro.so",
-    "Atari 7800": "prosystem_libretro.so",
-    "Nintendo GameBoy": "gambatte_libretro.so",
-    "Nintendo GameBoy Advance": "mgba_libretro.so",
-    "Nintendo GameBoy Color": "gambatte_libretro.so",
-    "Nintendo 3DS": "citra_libretro.so",
-    "Nintendo DS": "melonds_libretro.so",
-    "Nintendo 64": "mupen64plus_next_libretro.so",
-    "Nintendo GameCube": "dolphin_libretro.so",
-    "Nintendo Wii": "dolphin_libretro.so",
-    "Sony PlayStation": "pcsx_rearmed_libretro.so",
-    "Sony PlayStation 2": "pcsx2_libretro.so",
-    "Sony PlayStation 3": "rpcs3_libretro.so",
-    "Sony PlayStation Portable": "ppsspp_libretro.so"
+    "Atari 2600": "stella2023_libretro",
+    "Atari 5200": "a5200_libretro",
+    "Atari 7800": "prosystem_libretro",
+    "Nintendo GameBoy": "gambatte_libretro",
+    "Nintendo GameBoy Advance": "mgba_libretro",
+    "Nintendo GameBoy Color": "gambatte_libretro",
+    "Nintendo 3DS": "citra_libretro",
+    "Nintendo DS": "melonds_libretro",
+    "Nintendo 64": "mupen64plus_next_libretro",
+    "Nintendo GameCube": "dolphin_libretro",
+    "Nintendo Wii": "dolphin_libretro",
+    "Sony PlayStation": "pcsx_rearmed_libretro",
+    "Sony PlayStation 2": "pcsx2_libretro",
+    "Sony PlayStation 3": "rpcs3_libretro",
+    "Sony PlayStation Portable": "ppsspp_libretro"
 }
+
+# Cartella per i file di configurazione degli emulatori
+EMULATOR_CONFIG_FOLDER = resource_path(os.path.join("emulator", "config"))
+if not os.path.exists(EMULATOR_CONFIG_FOLDER):
+    os.makedirs(EMULATOR_CONFIG_FOLDER)
+
+# Cartella per la cache
+CACHE_FOLDER = os.path.join(os.getcwd(), "cache")
+if not os.path.exists(CACHE_FOLDER):
+    os.makedirs(CACHE_FOLDER)
+
+RETROARCH_URLS = {
+    "Windows": "https://buildbot.libretro.com/nightly/windows/x86_64/RetroArch.7z",
+    "Linux": "https://buildbot.libretro.com/stable/1.18.0/linux/x86_64/RetroArch.7z",
+    "Darwin": "https://buildbot.libretro.com/stable/1.18.0/apple/osx/universal/RetroArch_Metal.dmg"
+}
+
+RETROARCH_EXTRACT_FOLDER = os.path.join("emulator", "RetroArch")
+if not os.path.exists(RETROARCH_EXTRACT_FOLDER):
+    os.makedirs(RETROARCH_EXTRACT_FOLDER)
 
 # Cartella per i file di configurazione degli emulatori (es. RetroArch per ogni core)
 EMULATOR_CONFIG_FOLDER = resource_path(os.path.join("emulator", "config"))
@@ -78,17 +121,6 @@ if not os.path.exists(EMULATOR_CONFIG_FOLDER):
 CACHE_FOLDER = os.path.join(os.getcwd(), "cache")
 if not os.path.exists(CACHE_FOLDER):
     os.makedirs(CACHE_FOLDER)
-
-# Configurazione persistente tramite QSettings
-SETTINGS_ORG = "MyCompany"
-SETTINGS_APP = "RomsDownloader"
-settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
-
-# Percorso di default per i download (e la libreria)
-DEFAULT_DOWNLOADS_FOLDER = os.path.join(os.getcwd(), "downloads")
-USER_DOWNLOADS_FOLDER = settings.value("download_folder", DEFAULT_DOWNLOADS_FOLDER)
-if not os.path.exists(USER_DOWNLOADS_FOLDER):
-    os.makedirs(USER_DOWNLOADS_FOLDER)
 
 def set_user_download_folder(new_path):
     """Imposta il percorso della cartella dei download e lo salva in QSettings."""
