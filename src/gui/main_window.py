@@ -84,6 +84,9 @@ class MainWindow(QWidget):
         main_layout.addWidget(self.stacked_widget)
         self.setLayout(main_layout)
         
+        self.btn_start_downloads.setEnabled(True)
+        self.btn_cancel_downloads.setEnabled(False)
+
         self.load_games("Atari 2600")
     
     def init_download_manager_page(self):
@@ -233,6 +236,9 @@ class MainWindow(QWidget):
         self.update_table()
 
     def on_table_double_click(self, row, column):
+        if not self.btn_start_downloads.isEnabled():  # Download in corso, evita modifiche
+            QMessageBox.warning(self, "Attenzione", "Attendere il termine dei download prima di aggiungere altri giochi.")
+            return
         game_name = self.table.item(row, 0).text()
         
         game_already_downloaded = False
@@ -306,6 +312,9 @@ class MainWindow(QWidget):
         if not self.download_queue:
             self.log("Nessun download in coda.")
             return
+        
+        self.btn_start_downloads.setEnabled(False)   
+        self.btn_cancel_downloads.setEnabled(True)
 
         # Svuota la lista visiva della coda
         self.waiting_queue_list.clear()
@@ -327,7 +336,8 @@ class MainWindow(QWidget):
 
         self.download_manager_worker.moveToThread(self.download_manager_thread)
         self.download_manager_worker.log.connect(self.log)
-        self.download_manager_thread.started.connect(self.download_manager_worker.process_queue)
+        self.download_manager_thread.started.connect(self.download_manager_worker.process_queue)        
+        self.download_manager_worker.finished.connect(self.on_all_downloads_finished)
         self.download_manager_worker.finished.connect(self.download_manager_thread.quit)
         self.download_manager_worker.finished.connect(self.download_manager_worker.deleteLater)
         self.download_manager_thread.finished.connect(self.download_manager_thread.deleteLater)
@@ -340,6 +350,14 @@ class MainWindow(QWidget):
         if self.download_manager_worker:
             self.download_manager_worker.cancel_all()
             self.log("Download annullati.")
+            self.btn_start_downloads.setEnabled(True)    # Riabilita pulsante Avvia Download
+            self.btn_cancel_downloads.setEnabled(False)  # Disabilita pulsante Annulla Download
+
+
+    def on_all_downloads_finished(self):
+        self.log("Tutti i download completati.")
+        self.btn_start_downloads.setEnabled(True)    # Riabilita pulsante Avvia Download
+        self.btn_cancel_downloads.setEnabled(False)  # Disabilita pulsante Annulla Download
 
     def update_roms_current_download(self, game_name, downloaded, total, speed, remaining_time):
         # Calcola la percentuale di avanzamento
