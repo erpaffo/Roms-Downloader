@@ -101,7 +101,7 @@ class LibraryPage(QWidget):
 
         # 3. Costruisci il comando per avviare RetroArch
         config_folder = os.path.join("emulator", "config")
-        config_filename = core_filename + ".cfg"
+        config_filename = core_base + ".cfg"
         config_path = os.path.join(config_folder, config_filename)
         if os.path.exists(config_path):
             command = [retroarch_exe, "--config", config_path, "-L", core_path, rom_path]

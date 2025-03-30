@@ -10,6 +10,7 @@ import shutil
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 from src.config import USER_DOWNLOADS_FOLDER, RETROARCH_EXTRACT_FOLDER, RETROARCH_URLS
+from src.conversion import convert_binding
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
 
@@ -182,3 +183,33 @@ def download_and_extract_core(core_base):
     else:
         print(f"Core {core_base} non trovato dopo l'estrazione.")
         return None
+
+def update_emulator_config(config_path, new_bindings):
+    """
+    Aggiorna il file di configurazione nel percorso config_path.
+    Per ogni binding, se esiste una conversione nel dizionario KEY_MAPPING, salva il valore convertito.
+    """
+    lines = []
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            lines = f.readlines()
+
+    for command, user_value in new_bindings.items():
+        # Convertiamo il valore prima di salvarlo
+        mapped_value = convert_binding(user_value)
+        found = False
+        for idx, line in enumerate(lines):
+            if "=" in line:
+                key, _ = line.split("=", 1)
+                if key.strip() == command:
+                    lines[idx] = f'{command} = "{mapped_value}"\n'
+                    found = True
+                    break
+        if not found:
+            lines.append(f'{command} = "{mapped_value}"\n')
+
+    with open(config_path, "w") as f:
+        f.writelines(lines)
+def convert_key(key):
+    di = {"+":"add",
+          "-": "subtract"}

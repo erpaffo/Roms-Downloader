@@ -89,7 +89,9 @@ class EmulatorSettingsDialog(QDialog):
         try:
             with open(self.config_path, "w") as f:
                 for key, value in self.options.items():
-                    f.write(f"{key} = {value}\n")
+                    line = f'{key} = "{value}"\n'
+                    f.write(line)
+                    print(f"Scritta riga: {line}")
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Impossibile salvare la configurazione: {e}")

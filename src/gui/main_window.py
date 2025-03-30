@@ -15,10 +15,13 @@ from src.config import CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
-from src.utils import extract_nations, format_rate, format_space, ALLOWED_NATIONS
+from src.utils import extract_nations, format_rate, format_space, ALLOWED_NATIONS, update_emulator_config
 from src.gui.settings_dialog import SettingsDialog
 from src.gui.library_page import LibraryPage
 from src.gui.weight_item import WeightItem
+from src.gui.hotkeys_dialog import HotkeysDialog
+from src.default_keybindings import DEFAULT_KEYBINDINGS
+from src.key_bindings import KeyBindings
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -47,6 +50,8 @@ class MainWindow(QWidget):
         self.stacked_widget.addWidget(self.library_page)             # indice 1
         self.stacked_widget.addWidget(self.roms_page)                # indice 2
         
+        self.key_bindings = KeyBindings(DEFAULT_KEYBINDINGS)
+
         # Creazione barra menu con  impostazioni
         menu_bar = QMenuBar(self)
         settings_menu = QMenu("Settings", self)
@@ -56,7 +61,11 @@ class MainWindow(QWidget):
         settings_action = QAction("Opzioni", self)
         settings_action.triggered.connect(self.show_settings_dialog)
         settings_menu.addAction(settings_action)
-    
+
+        hotkeys_action = QAction("Configura Hotkeys", self)
+        hotkeys_action.triggered.connect(self.open_hotkeys_dialog)
+        settings_menu.addAction(hotkeys_action)
+
         emulator_menu = QMenu("Emulator", self)
         menu_bar.addMenu(emulator_menu)
         # Per ogni core in DEFAULT_CORES, aggiungi un'azione per aprire il dialogo di impostazioni
@@ -506,3 +515,19 @@ class MainWindow(QWidget):
         dialog = EmulatorSettingsDialog(core_name, config_path, self)
         if dialog.exec():
             self.log(f"Impostazioni per {core_name} aggiornate. Config file: {dialog.get_config_path()}")
+
+    def open_hotkeys_dialog(self):
+        dialog = HotkeysDialog(self.key_bindings, self)
+        if dialog.exec():
+            # Dopo il salvataggio, aggiorna il file di configurazione relativo al core corrente.
+            # Supponiamo di avere il nome della console corrente, ad esempio "Nintendo DS".
+            console = "Nintendo DS"
+            # Otteniamo il nome base del core dal dizionario DEFAULT_CORES (definito in config.py)
+            from src.config import DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, CORE_EXT
+            core_base = DEFAULT_CORES.get(console)
+            if core_base:
+                config_filename = core_base + ".cfg" 
+                config_path = os.path.join(EMULATOR_CONFIG_FOLDER, config_filename)
+                # Aggiorniamo il file di configurazione con i nuovi binding
+                update_emulator_config(config_path, self.key_bindings.bindings)
+                self.log("Hotkeys aggiornate e file di configurazione aggiornato: " + config_filename)
