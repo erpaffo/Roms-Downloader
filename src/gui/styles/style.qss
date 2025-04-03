@@ -181,3 +181,92 @@ QTabBar::tab:selected {
 QTabBar::tab:!selected:hover {
     background: #d0d0d0;
 }
+
+/* Stili per la Pagina Libreria */
+
+QTreeWidget#LibraryTree {
+    border: 1px solid #cccccc;
+    alternate-background-color: #f8f8f8; /* Colore righe alternate */
+    background-color: white;
+}
+
+QTreeWidget#LibraryTree::item {
+    padding: 6px 4px; /* Più padding verticale */
+    /* border-bottom: 1px solid #eeeeee; */ /* Bordo leggero sotto ogni item (opzionale) */
+}
+
+QTreeWidget#LibraryTree::item:selected {
+    background-color: #cce5ff; /* Selezione più chiara */
+    color: #333; /* Testo scuro su selezione */
+}
+
+QTreeWidget#LibraryTree::item:hover:!selected {
+     background-color: #e8f4ff; /* Hover leggero */
+}
+
+/* Stile per l'header del TreeWidget (simile a TableWidget) */
+QTreeWidget#LibraryTree QHeaderView::section {
+    background-color: #e8e8e8;
+    padding: 6px;
+    border: 1px solid #cccccc;
+    border-bottom: 2px solid #cccccc; /* Bordo inferiore più marcato */
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+/* Stile per le frecce di espansione/collasso */
+QTreeWidget::branch:has-children:!has-siblings:closed,
+QTreeWidget::branch:closed:has-children:has-siblings {
+        border-image: none;
+        image: url(:/qt-project.org/styles/commonstyle/images/branch-closed-16.png); /* Usa icone standard se disponibili */
+}
+
+QTreeWidget::branch:open:has-children:!has-siblings,
+QTreeWidget::branch:open:has-children:has-siblings  {
+        border-image: none;
+        image: url(:/qt-project.org/styles/commonstyle/images/branch-open-16.png); /* Usa icone standard se disponibili */
+}
+
+/* Assicura che il pulsante Refresh usi lo stile generale */
+QPushButton#RefreshButton {
+    /* Eredita lo stile globale QPushButton, puoi aggiungere override qui se necessario */
+    /* Esempio: min-width: 60px; padding: 6px 10px; */
+}
+
+/* Stili per Pagina Controlli */
+
+QGroupBox#ControlsGroup {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 10px;
+}
+
+QGroupBox#ControlsGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px 0 5px;
+    left: 10px;
+}
+
+QScrollArea#ControlsScrollArea {
+    border: 1px solid #cccccc;
+    background-color: white;
+}
+
+/* Stile per HotkeyInput quando sta registrando */
+HotkeyInput[recording="true"] {
+    background-color: #e8f4ff; /* Sfondo azzurrino */
+    border: 1px solid #0078d7; /* Bordo blu */
+    font-weight: bold;
+}
+
+/* Stile per le etichette nella griglia dei controlli */
+QGridLayout QLabel {
+    padding-right: 5px; /* Aggiunge spazio tra etichetta e input */
+}
+
+/* Stile per il pulsante Salva specifico (opzionale) */
+QPushButton#SaveControlsButton {
+    /* Eredita stile globale, aggiungi override qui se necessario */
+    min-width: 120px; /* Pulsante un po' più largo */
+}

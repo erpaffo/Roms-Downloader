@@ -11,7 +11,6 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
 from src.gui.emulator_settings_dialog import EmulatorSettingsDialog
 from src.gui.roms_page import RomsPage
-# Assicurati che BASE_DIR sia importato correttamente e punti alla directory 'src' o alla base del progetto
 from src.config import (
     CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, BASE_DIR,
     USER_DOWNLOADS_FOLDER, set_user_download_folder, set_max_concurrent_downloads,
@@ -20,10 +19,7 @@ from src.config import (
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
-from src.utils import (
-    extract_nations, format_rate, format_space, ALLOWED_NATIONS, update_emulator_config,
-    convert_binding # Aggiungi convert_binding se non già importato altrove in utils
-)
+from src.utils import extract_nations, ALLOWED_NATIONS, update_emulator_config, convert_binding 
 from src.gui.settings_dialog import SettingsDialog
 from src.gui.library_page import LibraryPage
 from src.gui.weight_item import WeightItem
@@ -36,18 +32,13 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Roms Downloader")
-        # Imposta una dimensione iniziale e minima
         self.setGeometry(100, 100, 1000, 700)
         self.setMinimumSize(800, 600)
 
-        # Carica Stile QSS (usando il percorso corretto)
         try:
-            # Usa il percorso fornito nel tuo codice originale
             qss_path = os.path.join(BASE_DIR, "gui/styles/style.qss")
-            # Fallback se il percorso sopra non funziona (assumendo BASE_DIR sia 'src')
             if not os.path.exists(qss_path):
-                 qss_path = os.path.join(BASE_DIR, "style.qss") # Prova nella cartella src
-            # Fallback se style.qss è direttamente in gui/
+                 qss_path = os.path.join(BASE_DIR, "style.qss") 
             if not os.path.exists(qss_path):
                  qss_path = os.path.join(BASE_DIR, "../gui/style.qss")
 
@@ -60,7 +51,6 @@ class MainWindow(QWidget):
                     else:
                         print("WARNING: QApplication instance not found when applying stylesheet.")
             else:
-                # Se ancora non trovato, stampa un warning più specifico
                 print(f"WARNING: Stylesheet file not found at expected paths like '{os.path.join(BASE_DIR, 'gui', 'styles', 'style.qss')}' or similar.")
         except Exception as e:
             print(f"Error loading stylesheet: {e}")
@@ -90,11 +80,9 @@ class MainWindow(QWidget):
         self.nav_list.addItem("Libreria")
         self.nav_list.addItem("Gestione Download")
         self.nav_list.addItem("Controlli Console")
-        # Puoi aggiungere icone qui se le hai:
-        # self.nav_list.item(0).setIcon(QIcon("path/to/search_icon.png"))
+        # TODO AGGIUNGERE ICONE (self.nav_list.item(0).setIcon(QIcon("path/to/search_icon.png")))
         self.nav_list.currentRowChanged.connect(self.change_page)
         main_layout.addWidget(self.nav_list)
-        # --- Fine Navigazione Sidebar ---
 
         # Contenitore per MenuBar e StackedWidget
         content_container = QWidget()
@@ -105,7 +93,6 @@ class MainWindow(QWidget):
         # --- Menu Bar ---
         menu_bar = self._create_menu_bar() # Crea la menubar con un metodo helper
         content_layout.setMenuBar(menu_bar)
-        # --- Fine Menu Bar ---
 
         # --- Stacked Widget e Pagine ---
         self.stacked_widget = QStackedWidget()
@@ -122,7 +109,6 @@ class MainWindow(QWidget):
         self.stacked_widget.addWidget(self.controls_page)            # Indice 3
 
         content_layout.addWidget(self.stacked_widget)
-        # --- Fine Stacked Widget e Pagine ---
 
         main_layout.addWidget(content_container) # Aggiungi container a destra
 
@@ -841,5 +827,3 @@ class MainWindow(QWidget):
             self.log("Salvataggio Hotkeys completato.")
         else:
             self.log("Modifica Hotkeys annullata.")
-
-# --- Fine Classe MainWindow ---
