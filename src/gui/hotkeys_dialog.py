@@ -1,16 +1,67 @@
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QMessageBox, QGridLayout, QTabWidget, QWidget, QCheckBox, QVBoxLayout
+    QDialog, QVBoxLayout, QLabel, QPushButton, QMessageBox,
+    QGridLayout, QTabWidget, QWidget, QCheckBox, QLineEdit
 )
+from PySide6.QtCore import QTimer, Qt
+from PySide6.QtGui import QKeyEvent, QKeySequence
 from src.key_bindings import KeyBindings
+from src.conversion import convert_binding
+
+class HotkeyInput(QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.recording = False
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.on_timeout)
+    
+    def mousePressEvent(self, event):
+        # Quando l'utente clicca, attiva la modalità registrazione
+        self.clear()
+        self.setPlaceholderText("Premi un tasto...")
+        self.recording = True
+        self.timer.start(3000)  # 3 secondi di attesa
+        super().mousePressEvent(event)
+    
+    def keyPressEvent(self, event: QKeyEvent):
+        if self.recording:
+            self.timer.stop()
+            self.recording = False
+            # Ottieni il tasto premuto
+            key_text = event.text()
+            if not key_text:
+                # Per tasti non testuali (es. F1, etc.)
+                key_text = QKeySequence(event.key()).toString()
+            # Gestisci eventuali modificatori
+            modifiers = []
+            if event.modifiers() & Qt.ControlModifier:
+                modifiers.append("Ctrl")
+            if event.modifiers() & Qt.AltModifier:
+                modifiers.append("Alt")
+            if event.modifiers() & Qt.ShiftModifier:
+                modifiers.append("Shift")
+            if event.modifiers() & Qt.MetaModifier:
+                modifiers.append("Meta")
+            if modifiers:
+                key_text = "+".join(modifiers + [key_text])
+            # Converte il tasto nel mapping americano
+            converted_key = convert_binding(key_text)
+            self.setText(converted_key)
+        else:
+            super().keyPressEvent(event)
+    
+    def on_timeout(self):
+        # Timeout scattato senza ricevere input
+        self.recording = False
+        self.setPlaceholderText("Nessun tasto rilevato")
 
 class HotkeysDialog(QDialog):
     def __init__(self, bindings: KeyBindings, parent=None):
         super().__init__(parent)
-        self.bindings = bindings  # Istanza esistente di KeyBindings
+        self.bindings = bindings
         self.setWindowTitle("Configura Hotkeys")
 
-        # Dividi i binding in due gruppi, ad esempio "Controlli" e "Hotkeys"
+        # Suddividi i binding in "Controlli" e "Hotkeys"
         self.controls = {}
         self.others = {}
         for command, value in self.bindings.bindings.items():
@@ -55,7 +106,8 @@ class HotkeysDialog(QDialog):
                 input_widget = QCheckBox()
                 input_widget.setChecked(value.strip().lower() == "true")
             else:
-                input_widget = QLineEdit()
+                # Usa il widget HotkeyInput aggiornato per la registrazione del tasto
+                input_widget = HotkeyInput()
                 input_widget.setText(value)
             vbox.addWidget(input_widget)
             container.setLayout(vbox)
@@ -73,8 +125,6 @@ class HotkeysDialog(QDialog):
             else:
                 new_value = widget.text().strip()
             if new_value:
-                # Applichiamo il mapping: la GUI mantiene il valore originale,
-                # ma noi salvando usiamo convert_binding(new_value)
                 if not self.bindings.set_binding(command, new_value):
                     QMessageBox.warning(self, "Conflitto",
                         f"Il tasto '{new_value}' è già in uso per un altro comando. Scegliere un altro tasto.")

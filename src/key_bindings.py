@@ -1,5 +1,3 @@
-from typing import Dict, Optional
-
 class KeyBindings:
     def __init__(self, initial_bindings=None):
         if initial_bindings is None:

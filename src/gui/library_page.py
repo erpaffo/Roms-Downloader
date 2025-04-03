@@ -1,9 +1,9 @@
 import os
 import subprocess
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QHeaderView ,QTreeWidgetItem, QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QHeaderView, QTreeWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
 from src.utils import format_space, find_retroarch
-from src.config import USER_DOWNLOADS_FOLDER, settings, DEFAULT_DOWNLOADS_FOLDER, CORES_FOLDER, DEFAULT_CORES, CORE_EXT
+from src.config import USER_DOWNLOADS_FOLDER, settings, DEFAULT_DOWNLOADS_FOLDER, CORES_FOLDER, DEFAULT_CORES, CORE_EXT, EMULATOR_CONFIG_FOLDER
 
 class LibraryPage(QWidget):
     def __init__(self, parent=None):
@@ -92,22 +92,17 @@ class LibraryPage(QWidget):
         core_filename = core_base + CORE_EXT
         core_path = os.path.join(CORES_FOLDER, core_filename)
         if not os.path.exists(core_path):
-            # Se non esiste, prova a scaricarlo ed estrarlo
-            self.parent().log(f"Core per '{console_name}' non trovato. Scaricamento in corso...")
-            core_path = download_and_extract_core(core_base)
-            if not core_path:
-                QMessageBox.critical(self, "Errore", f"Impossibile scaricare il core per '{console_name}'.")
-                return
+            QMessageBox.critical(self, "Errore", f"Impossibile trovare il core per '{console_name}'.\nCore filename: {core_filename}")
+            return
 
-        # 3. Costruisci il comando per avviare RetroArch
-        config_folder = os.path.join("emulator", "config")
+        # 3. Costruisci il comando per avviare RetroArch con il file di configurazione specifico per il core
         config_filename = core_base + ".cfg"
-        config_path = os.path.join(config_folder, config_filename)
+        config_path = os.path.join(EMULATOR_CONFIG_FOLDER, config_filename)
         if os.path.exists(config_path):
             command = [retroarch_exe, "--config", config_path, "-L", core_path, rom_path]
         else:
             command = [retroarch_exe, "-L", core_path, rom_path]
-
+        
         try:
             print("Lancio comando:", command)  # Debug
             subprocess.Popen(command)

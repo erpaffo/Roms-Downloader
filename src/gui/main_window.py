@@ -22,6 +22,7 @@ from src.gui.weight_item import WeightItem
 from src.gui.hotkeys_dialog import HotkeysDialog
 from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.key_bindings import KeyBindings
+from src.gui.controls_page import ControlsPage
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -35,24 +36,27 @@ class MainWindow(QWidget):
         self.roms_active_download_widgets = {}  # Per tracciare i widget attivi in ROMS (già collegati dalla pagina ROMS)
         self.roms_progress_stats = {}  # game_name -> (downloaded, total, speed)
         self.roms_peak_speeds = {}     # game_name -> peak (in byte/sec)
-        self.last_speed ={}
+        self.last_speed = {}
 
         # Creazione dello stacked widget e delle pagine
         self.stacked_widget = QStackedWidget()
         self.download_manager_page = QWidget()  # pagina originale (se vuoi mantenerla)
-        self.library_page = LibraryPage()            # pagina libreria esistente
+        self.library_page = LibraryPage()         # pagina libreria esistente
         self.roms_page = RomsPage()               # nuova pagina ROMS per i download
+        self.controls_page = ControlsPage(config_folder=EMULATOR_CONFIG_FOLDER)
         
+
         self.init_download_manager_page()
         
         # Aggiungi le pagine allo stacked widget
         self.stacked_widget.addWidget(self.download_manager_page)  # indice 0
         self.stacked_widget.addWidget(self.library_page)             # indice 1
         self.stacked_widget.addWidget(self.roms_page)                # indice 2
-        
+        self.stacked_widget.addWidget(self.controls_page)
+
         self.key_bindings = KeyBindings(DEFAULT_KEYBINDINGS)
 
-        # Creazione barra menu con  impostazioni
+        # Creazione barra menu con impostazioni
         menu_bar = QMenuBar(self)
         settings_menu = QMenu("Settings", self)
         menu_bar.addMenu(settings_menu)
@@ -81,6 +85,9 @@ class MainWindow(QWidget):
         self.btn_download_manager = QPushButton("Roms")
         self.btn_library = QPushButton("Library")
         self.btn_roms = QPushButton("Download Manager")
+        controls_btn = QPushButton("Controlli per Console")
+        controls_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.controls_page))
+        nav_layout.addWidget(controls_btn)
         
         self.btn_download_manager.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
         self.btn_library.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
@@ -519,15 +526,30 @@ class MainWindow(QWidget):
     def open_hotkeys_dialog(self):
         dialog = HotkeysDialog(self.key_bindings, self)
         if dialog.exec():
-            # Dopo il salvataggio, aggiorna il file di configurazione relativo al core corrente.
-            # Supponiamo di avere il nome della console corrente, ad esempio "Nintendo DS".
+            # Dopo il salvataggio, aggiorna i file di configurazione.
+            # Supponiamo di determinare la console corrente, ad esempio "Nintendo DS"
             console = "Nintendo DS"
-            # Otteniamo il nome base del core dal dizionario DEFAULT_CORES (definito in config.py)
             from src.config import DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, CORE_EXT
             core_base = DEFAULT_CORES.get(console)
             if core_base:
-                config_filename = core_base + ".cfg" 
-                config_path = os.path.join(EMULATOR_CONFIG_FOLDER, config_filename)
-                # Aggiorniamo il file di configurazione con i nuovi binding
-                update_emulator_config(config_path, self.key_bindings.bindings)
-                self.log("Hotkeys aggiornate e file di configurazione aggiornato: " + config_filename)
+                # Definiamo il percorso per il file di configurazione globale
+                global_config_path = os.path.join(EMULATOR_CONFIG_FOLDER, "retroarch_global.cfg")
+                # E per il file di configurazione specifico del core
+                core_config_filename = core_base + ".cfg"
+                core_config_path = os.path.join(EMULATOR_CONFIG_FOLDER, core_config_filename)
+                
+                # Convertiamo i binding usando la funzione di conversione per uniformare il formato (layout americano)
+                from src.conversion import convert_binding
+                converted_bindings = {cmd: convert_binding(val) for cmd, val in self.key_bindings.bindings.items()}
+                
+                # Suddividiamo i binding: quelli che iniziano con "input_player1_" andranno nel file core, il resto nel file globale.
+                core_bindings = {cmd: val for cmd, val in converted_bindings.items() if cmd.startswith("input_player1_")}
+                global_bindings = {cmd: val for cmd, val in converted_bindings.items() if not cmd.startswith("input_player1_")}
+                
+                # Aggiorniamo i due file di configurazione usando la funzione di update.
+                from src.utils import update_emulator_config
+                update_emulator_config(global_config_path, global_bindings)
+                update_emulator_config(core_config_path, core_bindings)
+                self.log("Path file retroarch_global.cfg: " + global_config_path)
+                self.log("Path file core: " + core_config_path)
+                self.log("Hotkeys aggiornate: file retroarch_global.cfg e " + core_config_filename + " aggiornati.")

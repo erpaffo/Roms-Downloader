@@ -26,5 +26,9 @@ KEY_MAPPING = {
 }
 
 def convert_binding(key: str) -> str:
-    """Restituisce il valore mappato se presente, altrimenti restituisce key."""
-    return KEY_MAPPING.get(key, key)
+    """
+    Confronta in lowercase e restituisce il valore mappato se presente,
+    altrimenti restituisce la chiave originale.
+    """
+    key_lower = key.lower()
+    return KEY_MAPPING.get(key_lower, key)
