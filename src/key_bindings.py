@@ -1,4 +1,3 @@
-# key_bindings.py
 from typing import Dict, Optional
 
 class KeyBindings:

@@ -2,7 +2,7 @@ import os
 import subprocess
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QHeaderView ,QTreeWidgetItem, QMessageBox
 from PySide6.QtCore import Qt
-from src.utils import download_and_extract_core, format_space, find_retroarch, download_and_install_retroarch
+from src.utils import format_space, find_retroarch
 from src.config import USER_DOWNLOADS_FOLDER, settings, DEFAULT_DOWNLOADS_FOLDER, CORES_FOLDER, DEFAULT_CORES, CORE_EXT
 
 class LibraryPage(QWidget):

@@ -9,7 +9,7 @@ from pyunpack import Archive
 import shutil
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
-from src.config import USER_DOWNLOADS_FOLDER, RETROARCH_EXTRACT_FOLDER, RETROARCH_URLS
+from src.config import USER_DOWNLOADS_FOLDER, RETROARCH_EXTRACT_FOLDER
 from src.conversion import convert_binding
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
@@ -95,94 +95,6 @@ def find_retroarch():
 
 def is_retroarch_installed():
     return find_retroarch() is not None
-
-def download_and_install_retroarch(log_func=print):
-    system_os = platform.system()
-    url = RETROARCH_URLS.get(system_os)
-    if not url:
-        log_func(f"Sistema operativo {system_os} non supportato.")
-        return False
-
-    os.makedirs(USER_DOWNLOADS_FOLDER, exist_ok=True)
-    local_file = os.path.join(USER_DOWNLOADS_FOLDER, os.path.basename(url))
-
-    log_func(f"Scarico RetroArch da: {url}")
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_file, 'wb') as f:
-            for chunk in r.iter_content(1024*1024):
-                f.write(chunk)
-
-    log_func("Download completato. Estrazione in corso...")
-    Archive(local_file).extractall(RETROARCH_EXTRACT_FOLDER)
-    os.remove(local_file)
-    log_func("RetroArch installato correttamente.")
-
-    retroarch_exe = find_retroarch()
-    return retroarch_exe is not None
-
-import os
-import sys
-import requests
-import zipfile
-from bs4 import BeautifulSoup
-
-def download_and_extract_core(core_base):
-    """
-    Scarica ed estrae il core se non presente.
-    core_base: il nome base del core (es. "stella2023_libretro")
-    Restituisce il percorso completo del core estratto o None in caso di errore.
-    """
-    from src.config import NIGHTLY_URL, CORES_FOLDER, CORE_EXT
-    expected_zip_name = core_base + ".zip"
-
-    try:
-        response = requests.get(NIGHTLY_URL)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"Errore nel contattare {NIGHTLY_URL}: {e}")
-        return None
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    zip_url = None
-    for link in soup.find_all("a"):
-        href = link.get("href")
-        if href and expected_zip_name in href and href.endswith(".zip"):
-            zip_url = NIGHTLY_URL + href
-            break
-
-    if not zip_url:
-        print(f"Core {core_base} non trovato nella pagina nightly.")
-        return None
-
-    try:
-        r = requests.get(zip_url, stream=True)
-        r.raise_for_status()
-        zip_path = os.path.join(CORES_FOLDER, expected_zip_name)
-        with open(zip_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-    except Exception as e:
-        print(f"Errore nel download del core {core_base}: {e}")
-        return None
-
-    try:
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(CORES_FOLDER)
-        os.remove(zip_path)
-    except Exception as e:
-        print(f"Errore nell'estrazione del core {core_base}: {e}")
-        return None
-
-    core_filename = core_base + CORE_EXT
-    core_path = os.path.join(CORES_FOLDER, core_filename)
-    if os.path.exists(core_path):
-        print(f"Core {core_base} scaricato ed estratto in: {core_path}")
-        return core_path
-    else:
-        print(f"Core {core_base} non trovato dopo l'estrazione.")
-        return None
 
 def update_emulator_config(config_path, new_bindings):
     """

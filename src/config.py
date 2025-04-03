@@ -9,16 +9,58 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+def get_app_base_path():
+    """
+    Determina la directory base dell'applicazione.
+    Se l'app è bundlizzata (es. con PyInstaller), restituisce la directory dell'eseguibile.
+    Altrimenti, restituisce la directory in cui si trova questo file.
+    """
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    else:
+        return os.path.dirname(os.path.abspath(__file__))
+
+# Definizione della directory base e della struttura dati
+BASE_DIR = get_app_base_path()
+DATA_DIR = os.path.join(BASE_DIR, "app_data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
 # Configurazione persistente tramite QSettings
 SETTINGS_ORG = "MyCompany"
 SETTINGS_APP = "RomsDownloader"
 settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
 
-# Percorso di default per i download (e la libreria)
-DEFAULT_DOWNLOADS_FOLDER = os.path.join(os.getcwd(), "downloads")
+# Cartella per i download (e la libreria)
+DEFAULT_DOWNLOADS_FOLDER = os.path.join(DATA_DIR, "downloads")
 USER_DOWNLOADS_FOLDER = settings.value("download_folder", DEFAULT_DOWNLOADS_FOLDER)
 if not os.path.exists(USER_DOWNLOADS_FOLDER):
     os.makedirs(USER_DOWNLOADS_FOLDER)
+
+# Cartella per la cache
+CACHE_FOLDER = os.path.join(DATA_DIR, "cache")
+if not os.path.exists(CACHE_FOLDER):
+    os.makedirs(CACHE_FOLDER)
+
+# Cartella principale per l'emulazione: contiene RetroArch, core e file di configurazione
+EMULATOR_FOLDER = os.path.join(DATA_DIR, "emulator")
+if not os.path.exists(EMULATOR_FOLDER):
+    os.makedirs(EMULATOR_FOLDER)
+
+# Cartella per RetroArch estratto
+RETROARCH_EXTRACT_FOLDER = os.path.join(EMULATOR_FOLDER, "RetroArch")
+if not os.path.exists(RETROARCH_EXTRACT_FOLDER):
+    os.makedirs(RETROARCH_EXTRACT_FOLDER)
+
+# Cartella per i core
+CORES_FOLDER = os.path.join(EMULATOR_FOLDER, "cores")
+if not os.path.exists(CORES_FOLDER):
+    os.makedirs(CORES_FOLDER)
+
+# Cartella per i file di configurazione degli emulatori
+EMULATOR_CONFIG_FOLDER = os.path.join(EMULATOR_FOLDER, "config")
+if not os.path.exists(EMULATOR_CONFIG_FOLDER):
+    os.makedirs(EMULATOR_CONFIG_FOLDER)
 
 # URL base per lo scraping
 BASE_URL = "https://myrient.erista.me/files/"
@@ -54,7 +96,6 @@ elif sys.platform.startswith("linux"):
     NIGHTLY_URL = "https://buildbot.libretro.com/nightly/linux/x86_64/latest/"
 elif sys.platform.startswith("darwin"):
     CORE_EXT = ".dylib"
-    # Per macOS, puoi decidere in base all'architettura: per ora assumiamo intel:
     NIGHTLY_URL = "https://buildbot.libretro.com/nightly/apple/osx/x86_64/latest/"
 else:
     CORE_EXT = ".so"
@@ -65,13 +106,8 @@ def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = BASE_DIR
     return os.path.join(base_path, relative_path)
-
-# Cartella dei core
-CORES_FOLDER = resource_path(os.path.join("emulator", "cores"))
-if not os.path.exists(CORES_FOLDER):
-    os.makedirs(CORES_FOLDER)
 
 # Mappa dei core di default: per ogni console, il nome base del core (senza estensione)
 DEFAULT_CORES = {
@@ -92,44 +128,14 @@ DEFAULT_CORES = {
     "Sony PlayStation Portable": "ppsspp_libretro"
 }
 
-# Cartella per i file di configurazione degli emulatori
-EMULATOR_CONFIG_FOLDER = resource_path(os.path.join("emulator", "config"))
-if not os.path.exists(EMULATOR_CONFIG_FOLDER):
-    os.makedirs(EMULATOR_CONFIG_FOLDER)
-
-# Cartella per la cache
-CACHE_FOLDER = os.path.join(os.getcwd(), "cache")
-if not os.path.exists(CACHE_FOLDER):
-    os.makedirs(CACHE_FOLDER)
-
-RETROARCH_URLS = {
-    "Windows": "https://buildbot.libretro.com/nightly/windows/x86_64/RetroArch.7z",
-    "Linux": "https://buildbot.libretro.com/stable/1.18.0/linux/x86_64/RetroArch.7z",
-    "Darwin": "https://buildbot.libretro.com/stable/1.18.0/apple/osx/universal/RetroArch_Metal.dmg"
-}
-
-RETROARCH_EXTRACT_FOLDER = os.path.join("emulator", "RetroArch")
-if not os.path.exists(RETROARCH_EXTRACT_FOLDER):
-    os.makedirs(RETROARCH_EXTRACT_FOLDER)
-
-# Cartella per i file di configurazione degli emulatori (es. RetroArch per ogni core)
-EMULATOR_CONFIG_FOLDER = resource_path(os.path.join("emulator", "config"))
-if not os.path.exists(EMULATOR_CONFIG_FOLDER):
-    os.makedirs(EMULATOR_CONFIG_FOLDER)
-
-# Cartella per la cache
-CACHE_FOLDER = os.path.join(os.getcwd(), "cache")
-if not os.path.exists(CACHE_FOLDER):
-    os.makedirs(CACHE_FOLDER)
-
 def set_user_download_folder(new_path):
     """Imposta il percorso della cartella dei download e lo salva in QSettings."""
-    global USER_DOWNLOADS_FOLDER
-    USER_DOWNLOADS_FOLDER = new_path
-    if not os.path.exists(USER_DOWNLOADS_FOLDER):
-        os.makedirs(USER_DOWNLOADS_FOLDER)
-    settings.setValue("download_folder", USER_DOWNLOADS_FOLDER)
-    print(f"Cartella dei download impostata su: {USER_DOWNLOADS_FOLDER}")
+    global USER_DOWNLOAD_FOLDER
+    USER_DOWNLOAD_FOLDER = new_path
+    if not os.path.exists(USER_DOWNLOAD_FOLDER):
+        os.makedirs(USER_DOWNLOAD_FOLDER)
+    settings.setValue("download_folder", USER_DOWNLOAD_FOLDER)
+    print(f"Cartella dei download impostata su: {USER_DOWNLOAD_FOLDER}")
 
 # Numero massimo di download concorrenti (default 2)
 MAX_CONCURRENT_DOWNLOADS = int(settings.value("max_dl", 2))
@@ -145,4 +151,3 @@ def add_console(name, link):
     'name' è il titolo visualizzato e 'link' è il percorso relativo usato per lo scraping.
     """
     CONSOLES[name] = link
-
