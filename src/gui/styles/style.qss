@@ -1,0 +1,183 @@
+/* src/style.qss - Foglio di stile iniziale */
+
+QWidget {
+    background-color: #f0f0f0; /* Sfondo leggermente grigio per la finestra principale */
+    color: #333; /* Colore del testo scuro */
+    font-family: "Segoe UI", Arial, sans-serif; /* Font di sistema comune */
+}
+
+QLabel {
+    font-size: 10pt;
+    padding: 2px;
+}
+
+QLineEdit, QPlainTextEdit, QSpinBox {
+    background-color: #ffffff; /* Sfondo bianco per input */
+    border: 1px solid #cccccc; /* Bordo grigio chiaro */
+    border-radius: 3px; /* Angoli arrotondati */
+    padding: 5px;
+    font-size: 10pt;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+    border: 1px solid #0078d7; /* Bordo blu quando selezionato */
+}
+
+QPushButton {
+    background-color: #0078d7; /* Blu Microsoft */
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 8px 15px;
+    font-size: 10pt;
+    font-weight: bold;
+    min-width: 80px; /* Larghezza minima */
+}
+
+QPushButton:hover {
+    background-color: #005a9e; /* Blu più scuro al passaggio del mouse */
+}
+
+QPushButton:pressed {
+    background-color: #003a6e; /* Blu ancora più scuro quando premuto */
+}
+
+QPushButton:disabled {
+    background-color: #cccccc;
+    color: #888888;
+}
+
+QComboBox {
+    background-color: white;
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+    padding: 5px;
+    min-height: 25px; /* Altezza minima per allinearsi meglio con altri input */
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left-width: 1px;
+    border-left-color: #cccccc;
+    border-left-style: solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: #e0e0e0;
+}
+
+QComboBox::down-arrow {
+    image: url(:/qt-project.org/styles/commonstyle/images/standardbutton-down-16.png); /* Usa una freccia standard se disponibile */
+}
+
+QComboBox QAbstractItemView { /* Stile per il menu a tendina */
+    border: 1px solid #cccccc;
+    background-color: white;
+    selection-background-color: #0078d7;
+    selection-color: white;
+}
+
+QTableWidget {
+    border: 1px solid #cccccc;
+    gridline-color: #e0e0e0; /* Colore delle linee della griglia */
+    background-color: white;
+}
+
+QTableWidget::item {
+    padding: 5px;
+}
+
+QTableWidget::item:selected {
+    background-color: #0078d7;
+    color: white;
+}
+
+QHeaderView::section {
+    background-color: #e8e8e8; /* Sfondo leggermente più scuro per le intestazioni */
+    padding: 4px;
+    border: 1px solid #cccccc;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+QProgressBar {
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+    text-align: center;
+    background-color: #ffffff;
+    height: 20px;
+}
+
+QProgressBar::chunk {
+    background-color: #0078d7; /* Stesso blu dei pulsanti */
+    border-radius: 3px;
+    margin: 0.5px; /* Piccolo margine per separare chunk e bordo */
+}
+
+QListWidget {
+    background-color: white;
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+}
+
+QListWidget::item {
+    padding: 5px;
+}
+
+QListWidget::item:selected {
+    background-color: #0078d7;
+    color: white;
+}
+
+QMenuBar {
+    background-color: #e8e8e8;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 4px 8px;
+}
+
+QMenuBar::item:selected {
+    background: #cccccc;
+}
+
+QMenu {
+    background-color: white;
+    border: 1px solid #cccccc;
+}
+
+QMenu::item {
+    padding: 5px 25px 5px 25px;
+}
+
+QMenu::item:selected {
+    background-color: #0078d7;
+    color: white;
+}
+
+QTabWidget::pane { /* Contenitore delle schede */
+    border-top: 1px solid #cccccc;
+    margin-top: -1px; /* Sovrapponi leggermente al bordo delle schede */
+}
+
+QTabBar::tab {
+    background: #e0e0e0;
+    border: 1px solid #cccccc;
+    border-bottom-color: #f0f0f0; /* Rendi il bordo inferiore uguale allo sfondo della finestra */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 6px 12px;
+    margin-right: 2px;
+}
+
+QTabBar::tab:selected {
+    background: #f0f0f0; /* Sfondo uguale alla finestra quando selezionato */
+    border-bottom-color: #f0f0f0; /* Nascondi il bordo inferiore */
+    margin-bottom: -1px; /* Tira su la scheda selezionata */
+}
+
+QTabBar::tab:!selected:hover {
+    background: #d0d0d0;
+}
