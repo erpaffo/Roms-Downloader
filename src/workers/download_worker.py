@@ -8,8 +8,7 @@ from src.config import USER_DOWNLOADS_FOLDER
 
 
 class DownloadWorker(QObject):
-    # Ora il segnale emette: (game_name, downloaded_bytes, total_bytes, speed (B/s), remaining_time (sec))
-    progress_update = Signal(str, int, int, float, float)
+    progress_update = Signal(str, int, int, float, float) # (game_name, downloaded_bytes, total_bytes, speed (B/s), remaining_time (sec)
     finished = Signal(str, str)  # (game_name, local_filename)
     log = Signal(str)
     

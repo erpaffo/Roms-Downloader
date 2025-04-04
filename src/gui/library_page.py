@@ -102,7 +102,7 @@ class LibraryPage(QWidget):
         except Exception as e:
              error_msg = f"Errore durante la scansione della libreria: {e}"
              self.library_tree_widget.addTopLevelItem(QTreeWidgetItem([error_msg]))
-             logging.exception(error_msg) # Logga anche il traceback
+             logging.exception(error_msg) 
              return
 
         if not files_by_console:
@@ -135,7 +135,7 @@ class LibraryPage(QWidget):
         self.load_library()
 
     def launch_game_from_library(self, item: QTreeWidgetItem, column: int):
-        """Launches the selected game using RetroArch on double-click."""
+        """Launches the selected game using RetroArch on double-click, loading only the core-specific config file."""
         if item.childCount() > 0 or not item.data(0, Qt.ItemDataRole.UserRole):
             return
 
@@ -167,23 +167,22 @@ class LibraryPage(QWidget):
                                  "Assicurati che il core sia presente nella cartella 'cores'.")
             return
 
-        config_filename = core_base + ".cfg"
-        config_path = os.path.join(EMULATOR_CONFIG_FOLDER, config_filename)
-
         command = [retroarch_exe]
-        if os.path.exists(config_path):
-            command.extend(["--config", config_path])
-            logging.info(f"Using core-specific config file: {config_path}")
+
+        core_config_filename = core_base + ".cfg"
+        core_config_path = os.path.join(EMULATOR_CONFIG_FOLDER, core_config_filename)
+
+        if os.path.exists(core_config_path):
+            command.extend(["--config", core_config_path])
+            logging.info(f"Using core-specific config file (contains merged settings): {core_config_path}")
         else:
-            global_config_path = os.path.join(EMULATOR_CONFIG_FOLDER, "retroarch_global.cfg")
-            if os.path.exists(global_config_path):
-                 command.extend(["--config", global_config_path])
-                 logging.info(f"Using global config file: {global_config_path}")
+            logging.warning(f"Core-specific config file not found: {core_config_path}. Launching without --config.")
 
         command.extend(["-L", core_path, rom_path])
 
         try:
             logging.info(f"Launching command: {' '.join(command)}")
+            command.append("--verbose")
             subprocess.Popen(command)
         except OSError as e:
             logging.error(f"Failed to execute command: {' '.join(command)}. Error: {e}")
@@ -194,3 +193,4 @@ class LibraryPage(QWidget):
             logging.exception(f"Unexpected error launching RetroArch: {e}")
             QMessageBox.critical(self, "Errore Imprevisto",
                                  f"Errore imprevisto durante l'avvio di RetroArch:\n{e}")
+            

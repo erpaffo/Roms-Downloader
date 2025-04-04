@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from src.config import (USER_DOWNLOADS_FOLDER, set_user_download_folder,
                         MAX_CONCURRENT_DOWNLOADS, set_max_concurrent_downloads,
                         CONSOLES, add_console)
-import logging # Aggiunto per logging
+import logging
 
 class SettingsDialog(QDialog):
     """
@@ -15,13 +15,13 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Opzioni Generali")
-        self.setMinimumWidth(500) # Imposta larghezza minima
+        self.setMinimumWidth(500)
         self.init_ui()
 
     def init_ui(self):
         """Initializes the user interface of the settings dialog."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(15) # Aggiungi spaziatura
+        layout.setSpacing(15)
 
         dl_layout = QHBoxLayout()
         dl_layout.addWidget(QLabel("Cartella dei Download:"))
@@ -37,15 +37,15 @@ class SettingsDialog(QDialog):
         md_layout.addWidget(QLabel("Max download concorrenti:"))
         self.max_dl_spin = QSpinBox()
         self.max_dl_spin.setMinimum(1)
-        self.max_dl_spin.setMaximum(10) # Aumentato limite massimo? O era 5? Metti 10 per ora
+        self.max_dl_spin.setMaximum(10)
         self.max_dl_spin.setValue(MAX_CONCURRENT_DOWNLOADS)
-        self.max_dl_spin.setFixedWidth(60) # Larghezza fissa per spinbox
+        self.max_dl_spin.setFixedWidth(60) 
         md_layout.addWidget(self.max_dl_spin)
-        md_layout.addStretch() # Spinge lo spinbox a sinistra
+        md_layout.addStretch() 
         layout.addLayout(md_layout)
 
-        nc_group = QGroupBox("Aggiungi Nuova Console (Avanzato)") # Usa GroupBox
-        nc_layout = QFormLayout(nc_group) # Usa QFormLayout per allineamento Label: Campo
+        nc_group = QGroupBox("Aggiungi Nuova Console (Avanzato)")
+        nc_layout = QFormLayout(nc_group) 
         nc_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.new_console_name = QLineEdit()
@@ -58,16 +58,16 @@ class SettingsDialog(QDialog):
 
         self.btn_add_console = QPushButton("Aggiungi Console alla Lista")
         self.btn_add_console.clicked.connect(self.add_new_console)
-        nc_layout.addRow(self.btn_add_console) # Aggiungi pulsante al form layout
+        nc_layout.addRow(self.btn_add_console)
         layout.addWidget(nc_group)
 
-        layout.addStretch() # Aggiunge spazio prima dei pulsanti OK/Cancel
+        layout.addStretch()
 
         btn_layout = QHBoxLayout()
-        btn_layout.addStretch() # Spinge i pulsanti a destra
+        btn_layout.addStretch() 
         self.btn_ok = QPushButton("OK")
-        self.btn_ok.setDefault(True) # Rende OK il pulsante default
-        self.btn_ok.clicked.connect(self.accept_settings) # Connetti a un metodo che salva prima di accettare
+        self.btn_ok.setDefault(True) 
+        self.btn_ok.clicked.connect(self.accept_settings) 
         self.btn_cancel = QPushButton("Annulla")
         self.btn_cancel.clicked.connect(self.reject)
         btn_layout.addWidget(self.btn_ok)
@@ -79,7 +79,6 @@ class SettingsDialog(QDialog):
         folder = QFileDialog.getExistingDirectory(self, "Seleziona cartella download", USER_DOWNLOADS_FOLDER)
         if folder:
             self.download_folder_edit.setText(folder)
-            # Non chiamare set_user_download_folder qui, fallo solo quando si preme OK
 
     def add_new_console(self):
         """Adds a new console entry to the configuration."""
@@ -88,8 +87,6 @@ class SettingsDialog(QDialog):
         if not name or not link:
             QMessageBox.warning(self, "Dati Mancanti", "Inserire sia il Titolo che il Link per la nuova console.")
             return
-
-        # Aggiungi validazione link se necessario (es. controllo slash finale?)
 
         if name in CONSOLES:
              reply = QMessageBox.question(self, "Console Esistente",
@@ -100,12 +97,11 @@ class SettingsDialog(QDialog):
                  return
 
         try:
-            add_console(name, link) # Chiama la funzione da config.py
+            add_console(name, link) 
             QMessageBox.information(self, "Console Aggiunta",
                                     f"Console '{name}' aggiunta/aggiornata.\n"
                                     "Potrebbe essere necessario riavviare l'applicazione per vederla nella lista principale.")
             logging.info(f"Nuova console aggiunta/aggiornata: {name} -> {link}")
-            # Svuota i campi solo se l'aggiunta ha successo
             self.new_console_name.clear()
             self.new_console_link.clear()
         except Exception as e:
@@ -115,19 +111,17 @@ class SettingsDialog(QDialog):
 
     def accept_settings(self):
         """Applies the selected settings and closes the dialog."""
-        # Applica download folder (se cambiato)
         new_folder = self.download_folder_edit.text()
         if new_folder != USER_DOWNLOADS_FOLDER:
              set_user_download_folder(new_folder)
              logging.info(f"Cartella download impostata su: {new_folder}")
 
-        # Applica max downloads
         new_max_dl = self.max_dl_spin.value()
         if new_max_dl != MAX_CONCURRENT_DOWNLOADS:
              set_max_concurrent_downloads(new_max_dl)
              logging.info(f"Max download concorrenti impostato su: {new_max_dl}")
 
-        self.accept() # Chiude il dialogo con stato OK
+        self.accept() 
 
 
     def get_values(self):

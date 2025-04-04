@@ -6,7 +6,6 @@ class ProgressWidget(QWidget):
 
         layout = QVBoxLayout()
 
-        # Etichetta e progress bar per singolo file
         self.single_file_label = QLabel("Download corrente:")
         self.single_file_progress = QProgressBar()
         self.single_file_label = QLabel("Nessun file in download.")

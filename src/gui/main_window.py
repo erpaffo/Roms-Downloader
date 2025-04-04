@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QThread, QSize
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
-# from src.gui.emulator_settings_dialog import EmulatorSettingsDialog # Rimosso
 from src.gui.roms_page import RomsPage
 from src.config import (
     CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, BASE_DIR,
@@ -23,9 +22,7 @@ from src.utils import extract_nations, ALLOWED_NATIONS, update_emulator_config, 
 from src.gui.settings_dialog import SettingsDialog
 from src.gui.library_page import LibraryPage
 from src.gui.weight_item import WeightItem
-# from src.gui.hotkeys_dialog import HotkeysDialog # Rimosso
 from src.default_keybindings import DEFAULT_KEYBINDINGS
-# from src.key_bindings import KeyBindings # Rimosso se non più usato
 from src.gui.controls_page import ControlsPage
 
 class MainWindow(QWidget):
@@ -72,10 +69,12 @@ class MainWindow(QWidget):
         self.nav_list = QListWidget()
         self.nav_list.setObjectName("NavList")
         self.nav_list.setFixedWidth(180)
+        
         self.nav_list.addItem("Cerca ROMs")
         self.nav_list.addItem("Libreria")
         self.nav_list.addItem("Gestione Download")
-        self.nav_list.addItem("Controlli & Impostazioni") # Nome aggiornato
+        self.nav_list.addItem("Controlli & Impostazioni")
+
         self.nav_list.currentRowChanged.connect(self.change_page)
         main_layout.addWidget(self.nav_list)
 

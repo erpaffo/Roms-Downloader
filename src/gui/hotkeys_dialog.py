@@ -177,8 +177,7 @@ class HotkeysDialog(QDialog):
                  QMessageBox.critical(self,"Errore Interno", "Oggetto bindings non valido.")
                  return
 
-
         if has_conflict:
-            return # Non chiudere se c'è conflitto
+            return 
         
         self.accept()

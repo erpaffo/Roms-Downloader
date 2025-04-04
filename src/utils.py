@@ -76,33 +76,24 @@ def format_space(bytes_value):
 
 def find_retroarch():
     """Cerca l'eseguibile di RetroArch sul sistema, includendo il percorso relativo dell'app."""
-    # 1. Cerca nel PATH di sistema (modo preferito)
     path = shutil.which("retroarch")
-    if path and os.path.exists(path): # Aggiunto check exists per sicurezza con which
+    if path and os.path.exists(path):
         print(f"RetroArch trovato nel PATH: {path}")
         return path
 
-    # 2. Costruisci il percorso relativo basato sulla configurazione
-    # Determina il nome dell'eseguibile in base all'OS
     exe_name = "retroarch.exe" if sys.platform.startswith("win") else "retroarch"
-    # Il percorso è RETROARCH_EXTRACT_FOLDER + nome eseguibile
     relative_path_from_config = os.path.join(RETROARCH_EXTRACT_FOLDER, exe_name)
 
-    # Controlla se esiste nel percorso relativo definito in config.py
     if os.path.exists(relative_path_from_config):
         print(f"RetroArch trovato nel percorso relativo dell'app: {relative_path_from_config}")
         return relative_path_from_config
 
-    # 3. Fallback: Cerca in percorsi comuni specifici del sistema operativo (come ultima risorsa)
     possible = []
     if sys.platform.startswith("win"):
-        # Rimuovi il percorso relativo già controllato sopra
         possible = [r"C:\RetroArch-Win64\retroarch.exe", r"C:\Program Files\RetroArch\retroarch.exe"]
     elif sys.platform.startswith("linux"):
-        # Rimuovi percorsi hardcoded che potrebbero non essere corretti
         possible = ["/usr/bin/retroarch", "/usr/local/bin/retroarch",
-                    # Aggiungi un percorso relativo alla directory base dell'app come fallback estremo
-                    os.path.join(BASE_DIR, "..", "app_data", "emulator", "RetroArch", "retroarch")] # Percorso relativo a src
+                    os.path.join(BASE_DIR, "..", "app_data", "emulator", "RetroArch", "retroarch")]
     elif sys.platform.startswith("darwin"):
         possible = ["/Applications/RetroArch.app/Contents/MacOS/retroarch"]
 
@@ -112,7 +103,6 @@ def find_retroarch():
             print(f"RetroArch trovato nel percorso comune: {p}")
             return p
 
-    # 4. Se non trovato da nessuna parte
     print("RetroArch non trovato.")
     return None
 
@@ -130,7 +120,6 @@ def update_emulator_config(config_path, new_bindings):
             lines = f.readlines()
 
     for command, user_value in new_bindings.items():
-        # Convertiamo il valore prima di salvarlo
         mapped_value = convert_binding(user_value)
         found = False
         for idx, line in enumerate(lines):
@@ -145,6 +134,7 @@ def update_emulator_config(config_path, new_bindings):
 
     with open(config_path, "w") as f:
         f.writelines(lines)
+
 def convert_key(key):
     di = {"+":"add",
           "-": "subtract"}

@@ -1,5 +1,5 @@
 import re
-import logging # Aggiunto per logging
+import logging
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCore import Qt
 
@@ -11,14 +11,9 @@ class WeightItem(QTableWidgetItem):
     """
     def __init__(self, text):
         super().__init__(text)
-        # Tenta di convertire il testo in valore numerico all'inizializzazione
         self.value = self.convert_text_to_value(text)
-        # Salva il valore normalizzato (in MiB) nel ruolo UserRole per l'ordinamento
         self.setData(Qt.ItemDataRole.UserRole, self.value)
-        # Imposta il testo visualizzato (DisplayRole) per mostrare le unità originali
-        # Questo è già fatto da super().__init__(text), ma riaffermarlo non nuoce
         self.setData(Qt.ItemDataRole.DisplayRole, text)
-        # Allinea il testo a destra per i numeri
         self.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
     def convert_text_to_value(self, text):
@@ -34,22 +29,21 @@ class WeightItem(QTableWidgetItem):
           - "Unknown" -> 0
         """
         if not isinstance(text, str):
-             return 0 # Gestisce input non stringa
+             return 0
 
         try:
-            text_upper = text.strip().upper().replace(',', '.') # Normalizza separatore decimale
-            # Regex per catturare numero (con decimali) e unità (KB, KiB, MB, MiB, GB, GiB)
+            text_upper = text.strip().upper().replace(',', '.')
             match = re.match(r"([\d\.]+)\s*([KMGT]I?B|[BKMG])?", text_upper)
 
             if match:
                 number_str = match.group(1)
-                unit = match.group(2) if match.group(2) else 'B' # Default a Byte se non c'è unità
+                unit = match.group(2) if match.group(2) else 'B'
 
                 try:
                      number = float(number_str)
                 except ValueError:
                      logging.warning(f"Could not convert number part '{number_str}' to float in WeightItem for '{text}'")
-                     return 0 # Non è un numero valido
+                     return 0
 
                 if unit in ["GIB", "GB", "G"]:
                     return number * 1024.0
@@ -57,28 +51,23 @@ class WeightItem(QTableWidgetItem):
                     return number
                 elif unit in ["KIB", "KB", "K"]:
                     return number / 1024.0
-                elif unit == 'B': # Byte esplicito o implicito
+                elif unit == 'B':
                     return number / (1024.0 * 1024.0)
                 else:
-                     # Unità non riconosciuta, potrebbe essere solo un numero (bytes?)
-                     # O un testo non valido. Tentiamo di interpretarlo come byte.
                      try:
                          return float(text_upper) / (1024.0 * 1024.0)
                      except ValueError:
                           logging.warning(f"Unrecognized unit or non-numeric value in WeightItem: '{text}'")
-                          return 0 # Non numerico
+                          return 0
             else:
-                 # Nessuna corrispondenza con la regex (potrebbe essere solo testo?)
-                 # Prova a convertirlo direttamente in float (assumendo bytes)
                  try:
                       return float(text_upper) / (1024.0 * 1024.0)
                  except ValueError:
                       logging.warning(f"Could not parse WeightItem text as size: '{text}'")
-                      return 0 # Non è un numero
+                      return 0
         except Exception as e:
-            # Errore generico durante la conversione
             logging.exception(f"Error converting WeightItem text '{text}': {e}")
-            return 0 # Ritorna 0 in caso di qualsiasi errore
+            return 0
 
     def __lt__(self, other):
         """
@@ -88,24 +77,19 @@ class WeightItem(QTableWidgetItem):
         """
         if isinstance(other, QTableWidgetItem):
             try:
-                # Recupera i valori numerici salvati
                 self_val = self.data(Qt.ItemDataRole.UserRole)
                 other_val = other.data(Qt.ItemDataRole.UserRole)
 
-                # Assicurati che entrambi i valori siano validi (non None) e convertibili in float
                 if self_val is not None and other_val is not None:
                     return float(self_val) < float(other_val)
-                elif self_val is not None: # self ha valore, other no -> self è >
+                elif self_val is not None:
                      return False
-                elif other_val is not None: # other ha valore, self no -> self è <
+                elif other_val is not None:
                      return True
-                else: # Nessuno dei due ha valore numerico valido
-                     return False # Considerali uguali in termini numerici?
+                else:
+                     return False
             except (ValueError, TypeError) as e:
-                # Errore nella conversione o comparazione, usa fallback
                 logging.debug(f"Error comparing WeightItems numerically ({self.text()} vs {other.text()}): {e}")
-                pass # Usa comparazione di testo standard come fallback
+                pass
 
-        # Fallback alla comparazione di testo se other non è un QTableWidgetItem
-        # o se la comparazione numerica fallisce
         return super().__lt__(other)
