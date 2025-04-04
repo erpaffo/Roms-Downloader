@@ -11,7 +11,7 @@ from src.console_keybindings import CONSOLE_KEYBINDINGS
 from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.conversion import convert_binding
 from src.utils import update_emulator_config
-from src.config import EMULATOR_CONFIG_FOLDER, DEFAULT_CORES, get_save_directory
+from src.config import CORE_SETTINGS_DEFAULTS, EMULATOR_CONFIG_FOLDER, DEFAULT_CORES, get_save_directory
 
 PRETTY_LABELS = {
     "input_player1_a": "A", "input_player1_b": "B", "input_player1_x": "X", "input_player1_y": "Y",
@@ -53,15 +53,6 @@ CORE_COMMON_ALLOCATED_OPTIONS = [
     "video_vsync",
     "menu_font_color_red", "menu_font_color_green", "menu_font_color_blue"
 ]
-
-CORE_SETTINGS_DEFAULTS = {
-    "video_vsync": "false",
-    "video_driver": "gl",
-    "video_fullscreen": "false",
-    "audio_driver": "",
-    "input_driver": "",
-}
-
 
 VIDEO_DRIVERS = ["gl", "glcore", "vulkan", "d3d11", "d3d12", "metal", "sdl2", "null"]
 
@@ -497,7 +488,7 @@ class ControlsPage(QWidget):
         vsync_default = CORE_SETTINGS_DEFAULTS.get(vsync_key, "false")
         vsync_current_value = self.core_settings.get(vsync_key, vsync_default).lower()
         vsync_widget = QCheckBox()
-        vsync_widget.setChecked(vsync_current_value == "true")
+        vsync_widget.setChecked(vsync_current_value == "false")
         layout.addRow(vsync_label, vsync_widget)
         self.core_setting_widgets[vsync_key] = vsync_widget
 

@@ -11,8 +11,8 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
 from src.gui.roms_page import RomsPage
 from src.config import (
-    CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER, BASE_DIR,
-    USER_DOWNLOADS_FOLDER, set_user_download_folder, set_max_concurrent_downloads,
+    CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER,
+    USER_DOWNLOADS_FOLDER, resource_path, set_user_download_folder, set_max_concurrent_downloads,
     settings, DEFAULT_DOWNLOADS_FOLDER, MAX_CONCURRENT_DOWNLOADS
 )
 from src.workers.scrape_worker import ScrapeWorker
@@ -33,24 +33,35 @@ class MainWindow(QWidget):
         self.setMinimumSize(800, 600)
 
         try:
-            qss_path = os.path.join(BASE_DIR, "gui/styles/style.qss")
-            if not os.path.exists(qss_path):
-                 qss_path = os.path.join(BASE_DIR, "style.qss")
-            if not os.path.exists(qss_path):
-                 qss_path = os.path.join(BASE_DIR, "../gui/style.qss")
+            qss_relative_path = os.path.join("src", "gui", "styles", "style.qss")
+            qss_abs_path = resource_path(qss_relative_path)
 
-            if os.path.exists(qss_path):
-                with open(qss_path, "r") as f:
+            if os.path.exists(qss_abs_path):
+                with open(qss_abs_path, "r", encoding='utf-8') as f:
                     style_sheet = f.read()
                     app = QApplication.instance()
                     if app:
                         app.setStyleSheet(style_sheet)
+                        logging.info(f"Stile QSS caricato da: {qss_abs_path}")
                     else:
-                        print("WARNING: QApplication instance not found when applying stylesheet.")
+                        logging.warning("Istanza QApplication non trovata durante l'applicazione dello stile QSS.")
             else:
-                print(f"WARNING: Stylesheet file not found at expected paths like '{os.path.join(BASE_DIR, 'gui', 'styles', 'style.qss')}' or similar.")
+                qss_relative_path_alt = os.path.join("src", "style.qss")
+                qss_abs_path_alt = resource_path(qss_relative_path_alt)
+                if os.path.exists(qss_abs_path_alt):
+                     with open(qss_abs_path_alt, "r", encoding='utf-8') as f:
+                         style_sheet = f.read()
+                         app = QApplication.instance()
+                         if app:
+                             app.setStyleSheet(style_sheet)
+                             logging.info(f"Stile QSS caricato da: {qss_abs_path_alt}")
+                         else:
+                             logging.warning("Istanza QApplication non trovata durante l'applicazione dello stile QSS.")
+                else:
+                     logging.warning(f"File Stile QSS non trovato nei percorsi attesi:\n- {qss_abs_path}\n- {qss_abs_path_alt}")
+
         except Exception as e:
-            print(f"Error loading stylesheet: {e}")
+            logging.error(f"Errore durante il caricamento dello stile QSS: {e}")
 
         self.games_list = []
         self.download_queue = []

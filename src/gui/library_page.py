@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                                QTreeWidgetItem, QMessageBox)
 from PySide6.QtCore import Qt
 from PySide6 import QtGui
-from src.utils import format_space, find_retroarch
+from src.utils import create_default_core_config, format_space, find_retroarch
 from src.config import (USER_DOWNLOADS_FOLDER, settings, DEFAULT_DOWNLOADS_FOLDER,
                         CORES_FOLDER, DEFAULT_CORES, CORE_EXT,
                         EMULATOR_CONFIG_FOLDER)
@@ -135,7 +135,8 @@ class LibraryPage(QWidget):
         self.load_library()
 
     def launch_game_from_library(self, item: QTreeWidgetItem, column: int):
-        """Launches the selected game using RetroArch on double-click, loading only the core-specific config file."""
+        """Launches the selected game using RetroArch on double-click.
+           Creates a default core config file if it doesn't exist."""
         if item.childCount() > 0 or not item.data(0, Qt.ItemDataRole.UserRole):
             return
 
@@ -145,52 +146,50 @@ class LibraryPage(QWidget):
 
         retroarch_exe = find_retroarch()
         if not retroarch_exe:
-            QMessageBox.critical(self, "Errore Avvio",
-                                 "Eseguibile di RetroArch non trovato.\n"
-                                 "Assicurati che sia installato e nel PATH di sistema, "
-                                 "oppure che il percorso sia corretto in 'src/config.py'.")
+            QMessageBox.critical(self, "Errore Avvio", "Eseguibile di RetroArch non trovato.")
             return
 
         core_base = DEFAULT_CORES.get(console_name)
         if not core_base:
-            QMessageBox.warning(self, "Core Mancante",
-                                f"Nessun core predefinito trovato per la console '{console_name}'.\n"
-                                "Controlla la configurazione in 'src/config.py' (DEFAULT_CORES).")
+            QMessageBox.warning(self, "Core Mancante", f"Nessun core predefinito trovato per '{console_name}'.")
             return
 
         core_filename = core_base + CORE_EXT
         core_path = os.path.join(CORES_FOLDER, core_filename)
         if not os.path.exists(core_path):
-            QMessageBox.critical(self, "Errore Core",
-                                 f"File del core non trovato per '{console_name}'.\n"
-                                 f"Percorso atteso: {core_path}\n"
-                                 "Assicurati che il core sia presente nella cartella 'cores'.")
+            QMessageBox.critical(self, "Errore Core", f"File del core non trovato: {core_path}")
             return
-
-        command = [retroarch_exe]
 
         core_config_filename = core_base + ".cfg"
         core_config_path = os.path.join(EMULATOR_CONFIG_FOLDER, core_config_filename)
 
-        if os.path.exists(core_config_path):
+        config_created_or_exists = True
+        if not os.path.exists(core_config_path):
+            logging.info(f"File config per '{console_name}' non trovato. Tentativo di creazione default...")
+            if not create_default_core_config(core_config_path, console_name, core_base):
+                QMessageBox.warning(self, "Errore Creazione Config",
+                                    f"Impossibile creare il file di configurazione predefinito:\n{core_config_path}\n"
+                                    "Il gioco potrebbe non avviarsi o usare impostazioni errate.")
+                core_config_path = None
+                config_created_or_exists = False
+
+
+        command = [retroarch_exe]
+
+        if config_created_or_exists and core_config_path:
             command.extend(["--config", core_config_path])
-            logging.info(f"Using core-specific config file (contains merged settings): {core_config_path}")
+            logging.info(f"Using core-specific config file: {core_config_path}")
         else:
-            logging.warning(f"Core-specific config file not found: {core_config_path}. Launching without --config.")
+            logging.warning(f"Launching without specific config file for {console_name}.")
 
         command.extend(["-L", core_path, rom_path])
 
         try:
             logging.info(f"Launching command: {' '.join(command)}")
-            command.append("--verbose")
             subprocess.Popen(command)
         except OSError as e:
             logging.error(f"Failed to execute command: {' '.join(command)}. Error: {e}")
-            QMessageBox.critical(self, "Errore Avvio Sistema",
-                                 f"Impossibile eseguire il comando:\n{' '.join(command)}\n"
-                                 f"Errore di sistema: {e}")
+            QMessageBox.critical(self, "Errore Avvio Sistema", f"Impossibile eseguire il comando:\n{' '.join(command)}\nErrore: {e}")
         except Exception as e:
             logging.exception(f"Unexpected error launching RetroArch: {e}")
-            QMessageBox.critical(self, "Errore Imprevisto",
-                                 f"Errore imprevisto durante l'avvio di RetroArch:\n{e}")
-            
+            QMessageBox.critical(self, "Errore Imprevisto", f"Errore imprevisto durante l'avvio di RetroArch:\n{e}")

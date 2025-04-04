@@ -1,3 +1,4 @@
+import logging
 import re
 import zipfile
 import os
@@ -9,8 +10,11 @@ from pyunpack import Archive
 import shutil
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
-from src.config import BASE_DIR, USER_DOWNLOADS_FOLDER, RETROARCH_EXTRACT_FOLDER
+from src.config import RETROARCH_EXTRACT_FOLDER, SYSTEM_FOLDER, get_save_directory
+from src.console_keybindings import CONSOLE_KEYBINDINGS
 from src.conversion import convert_binding
+from src.default_keybindings import DEFAULT_KEYBINDINGS
+from src.config import CORE_SETTINGS_DEFAULTS
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
 
@@ -75,35 +79,44 @@ def format_space(bytes_value):
         return f"{bytes_value/(1024*1024):.1f} MB"
 
 def find_retroarch():
-    """Cerca l'eseguibile di RetroArch sul sistema, includendo il percorso relativo dell'app."""
-    path = shutil.which("retroarch")
-    if path and os.path.exists(path):
-        print(f"RetroArch trovato nel PATH: {path}")
-        return path
+    """
+    Finds the RetroArch executable.
 
-    exe_name = "retroarch.exe" if sys.platform.startswith("win") else "retroarch"
-    relative_path_from_config = os.path.join(RETROARCH_EXTRACT_FOLDER, exe_name)
+    Checks system PATH, then the application's configured data directory,
+    and finally common system-wide locations.
+    Returns the absolute path to the executable or None if not found.
+    """
+    path_in_syspath = shutil.which("retroarch")
+    if path_in_syspath and os.path.exists(path_in_syspath):
+        logging.info(f"RetroArch found in PATH: {path_in_syspath}")
+        return path_in_syspath
+    logging.info(RETROARCH_EXTRACT_FOLDER)
+    if RETROARCH_EXTRACT_FOLDER: # Assicurati che la variabile sia stata importata
+        exe_name = "retroarch.exe" if sys.platform.startswith("win") else "retroarch"
+        path_in_appdata = os.path.join(RETROARCH_EXTRACT_FOLDER, exe_name)
+        logging.info(f"Checking for RetroArch in configured app data path: {path_in_appdata}")
+        if os.path.exists(path_in_appdata):
+            logging.info(f"RetroArch found in configured app data path: {path_in_appdata}")
+            return os.path.abspath(path_in_appdata) # Restituisci percorso assoluto
+    else:
+         logging.warning("RETROARCH_EXTRACT_FOLDER non definito o non importato, salto controllo")
 
-    if os.path.exists(relative_path_from_config):
-        print(f"RetroArch trovato nel percorso relativo dell'app: {relative_path_from_config}")
-        return relative_path_from_config
 
     possible = []
     if sys.platform.startswith("win"):
         possible = [r"C:\RetroArch-Win64\retroarch.exe", r"C:\Program Files\RetroArch\retroarch.exe"]
     elif sys.platform.startswith("linux"):
-        possible = ["/usr/bin/retroarch", "/usr/local/bin/retroarch",
-                    os.path.join(BASE_DIR, "..", "app_data", "emulator", "RetroArch", "retroarch")]
+        possible = ["/usr/bin/retroarch", "/usr/local/bin/retroarch"]
     elif sys.platform.startswith("darwin"):
         possible = ["/Applications/RetroArch.app/Contents/MacOS/retroarch"]
 
-    print(f"RetroArch non trovato nel PATH o nel percorso relativo ({relative_path_from_config}). Controllo percorsi comuni: {possible}")
+    logging.debug(f"RetroArch not found in PATH or app data. Checking common paths: {possible}")
     for p in possible:
         if os.path.exists(p):
-            print(f"RetroArch trovato nel percorso comune: {p}")
+            logging.info(f"RetroArch found in common location: {p}")
             return p
 
-    print("RetroArch non trovato.")
+    logging.error("RetroArch executable not found in PATH, app data, or common locations.")
     return None
 
 def is_retroarch_installed():
@@ -138,3 +151,48 @@ def update_emulator_config(config_path, new_bindings):
 def convert_key(key):
     di = {"+":"add",
           "-": "subtract"}
+    
+def create_default_core_config(core_config_path: str, console_name: str, core_base_name: str):
+    """
+    Creates a default core-specific config file if it doesn't exist.
+    Merges global defaults, core setting defaults, console P1 defaults,
+    and calculated save/system paths. Converts keybindings.
+    Returns True on success, False on failure.
+    """
+    if os.path.exists(core_config_path):
+        logging.debug(f"File config core già esistente, non creato: {core_config_path}")
+        return True
+
+    logging.info(f"Creazione file config default per '{console_name}'/'{core_base_name}' in: {core_config_path}")
+
+    try:
+        combined_settings = DEFAULT_KEYBINDINGS.copy()
+        combined_settings.update(CORE_SETTINGS_DEFAULTS)
+        p1_defaults = CONSOLE_KEYBINDINGS.get(console_name, {})
+        combined_settings.update(p1_defaults)
+
+        save_dir = get_save_directory(console_name)
+        combined_settings['savefile_directory'] = os.path.abspath(save_dir)
+        combined_settings['savestate_directory'] = os.path.abspath(save_dir)
+        combined_settings['system_directory'] = os.path.abspath(SYSTEM_FOLDER)
+
+        final_settings = {}
+        known_hotkey_commands = set(DEFAULT_KEYBINDINGS.keys()).union(set(p1_defaults.keys()))
+
+        for command, value in combined_settings.items():
+            is_known_input = command.startswith("input_") and command in known_hotkey_commands
+            is_bool = str(value).lower() in ["true", "false"]
+            is_path = command.endswith("_directory")
+
+            if is_known_input and not is_bool and not is_path and value != "nul":
+                final_settings[command] = convert_binding(value)
+            else:
+                final_settings[command] = value
+
+        update_emulator_config(core_config_path, final_settings)
+        logging.info(f"File config default creato con successo: {core_config_path}")
+        return True
+
+    except Exception as e:
+        logging.exception(f"Errore imprevisto durante la creazione del file config default '{core_config_path}': {e}")
+        return False
