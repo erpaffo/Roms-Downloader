@@ -15,4 +15,6 @@ ROMsDownloader.spec
 emulator/retroarch
 emulator/
 venb/
+src/app_data/
+src/gui/styles/
 create_deb.md

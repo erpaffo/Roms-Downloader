@@ -53,6 +53,16 @@ EMULATOR_CONFIG_FOLDER = os.path.join(EMULATOR_FOLDER, "config")
 if not os.path.exists(EMULATOR_CONFIG_FOLDER):
     os.makedirs(EMULATOR_CONFIG_FOLDER)
 
+SYSTEM_FOLDER = os.path.join(DATA_DIR, "system") 
+
+if not os.path.exists(SYSTEM_FOLDER):
+    try:
+        os.makedirs(SYSTEM_FOLDER)
+        logging.info(f"Cartella System/BIOS creata: {SYSTEM_FOLDER}")
+    except OSError as e:
+        logging.error(f"Impossibile creare cartella System/BIOS '{SYSTEM_FOLDER}': {e}")
+
+
 SAVES_BASE_FOLDER = os.path.join(DATA_DIR, "saves")
 
 if not os.path.exists(SAVES_BASE_FOLDER):

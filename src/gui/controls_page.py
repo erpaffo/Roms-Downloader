@@ -441,7 +441,6 @@ class ControlsPage(QWidget):
 
             self.global_hotkey_widgets[command] = input_widget
 
-
     def _populate_core_settings_tab(self):
         """Populates the 'Core Settings' tab, including paths, V-Sync and Video Driver."""
         content_widget = self._get_scroll_content_widget(2)
@@ -457,45 +456,41 @@ class ControlsPage(QWidget):
 
         self.core_setting_widgets.clear()
 
-
         path_keys_to_add = [SAVEFILE_DIR_KEY, SAVESTATE_DIR_KEY, SYSTEM_DIR_KEY, SCREENSHOT_DIR_KEY]
-
-
         default_save_path = ""
         if self.current_console:
              try:
-                 from src.config import get_save_directory
+                 from src.config import get_save_directory, SYSTEM_FOLDER # Importa SYSTEM_FOLDER qui
                  default_save_path = get_save_directory(self.current_console)
              except ImportError:
-                  logging.error("Funzione get_save_directory non trovata in config.py")
+                  logging.error("Funzioni get_save_directory o SYSTEM_FOLDER non trovate in config.py")
+                  SYSTEM_FOLDER = "" # Fallback se import fallisce
              except Exception as e:
                   logging.error(f"Errore nel chiamare get_save_directory: {e}")
+                  SYSTEM_FOLDER = "" # Fallback
 
+        default_paths = {
+            SAVEFILE_DIR_KEY: default_save_path,
+            SAVESTATE_DIR_KEY: default_save_path,
+            SYSTEM_DIR_KEY: SYSTEM_FOLDER,
+            SCREENSHOT_DIR_KEY: ""
+        }
 
         for key in path_keys_to_add:
             label_text = PRETTY_LABELS.get(key, key.replace("_", " ").title()) + ":"
-            current_value = self.core_settings.get(key, "")
-
-            suggested_path = current_value
-            if not suggested_path and key in [SAVEFILE_DIR_KEY, SAVESTATE_DIR_KEY] and default_save_path:
-                 suggested_path = default_save_path
-
+            current_value = self.core_settings.get(key, default_paths.get(key, ""))
 
             path_layout = QHBoxLayout()
-            line_edit = QLineEdit(suggested_path)
-            line_edit.setPlaceholderText("Inserisci percorso o lascia vuoto per default RetroArch")
+            line_edit = QLineEdit(current_value)
+            line_edit.setPlaceholderText(f"Default RetroArch o {default_paths.get(key, 'N/D')}")
             browse_button = QPushButton("Sfoglia...")
-
-            browse_button.clicked.connect(lambda checked=False, le=line_edit: self._browse_directory(le))
+            browse_button.clicked.connect(lambda checked=False, le=line_edit, start=default_paths.get(key, os.path.expanduser("~")): self._browse_directory(le, start))
 
             path_layout.addWidget(line_edit)
             path_layout.addWidget(browse_button)
 
             layout.addRow(label_text, path_layout)
             self.core_setting_widgets[key] = line_edit
-
-
-
 
         vsync_key = "video_vsync"
         vsync_label = PRETTY_LABELS.get(vsync_key, "V-Sync") + ":"
@@ -505,8 +500,6 @@ class ControlsPage(QWidget):
         vsync_widget.setChecked(vsync_current_value == "true")
         layout.addRow(vsync_label, vsync_widget)
         self.core_setting_widgets[vsync_key] = vsync_widget
-
-
 
         vdriver_key = "video_driver"
         vdriver_label = PRETTY_LABELS.get(vdriver_key, "Driver Video") + ":"
@@ -524,19 +517,15 @@ class ControlsPage(QWidget):
         layout.addRow(vdriver_label, vdriver_widget)
         self.core_setting_widgets[vdriver_key] = vdriver_widget
 
-
-
         options_already_handled = {vsync_key, vdriver_key}.union(CORE_PATH_OPTIONS)
         p1_keys = set(CONSOLE_KEYBINDINGS.get(self.current_console, {}).keys())
         options_to_exclude = options_already_handled.union(p1_keys)
-
         core_options_to_show = sorted(list(set(CORE_USEFUL_OPTIONS + CORE_COMMON_ALLOCATED_OPTIONS) - options_to_exclude))
 
         for key in core_options_to_show:
             current_value = self.core_settings.get(key, CORE_SETTINGS_DEFAULTS.get(key, ""))
             is_boolean = current_value.lower() in ["true", "false"] or CORE_SETTINGS_DEFAULTS.get(key, "").lower() in ["true", "false"]
             label_text = PRETTY_LABELS.get(key, key.replace("_", " ").title()) + ":"
-
             if is_boolean:
                  input_widget = QCheckBox()
                  input_widget.setChecked(current_value.lower() == "true")
@@ -545,9 +534,7 @@ class ControlsPage(QWidget):
                  input_widget = QLineEdit()
                  input_widget.setText(current_value)
                  layout.addRow(label_text, input_widget)
-
             self.core_setting_widgets[key] = input_widget
-
 
     def reset_current_tab_to_defaults(self):
         """Resets the widgets in the currently visible tab to their default values (converted)."""
@@ -694,19 +681,19 @@ class ControlsPage(QWidget):
                 QMessageBox.critical(self, "Errore Salvataggio",
                                     "Si sono verificati errori durante il salvataggio:\n\n" + "\n".join(errors))
 
-    def _browse_directory(self, target_line_edit: QLineEdit):
+    def _browse_directory(self, target_line_edit: QLineEdit, start_dir: str = ""):
         """Opens a directory selection dialog and updates the target QLineEdit."""
-
-        start_dir = target_line_edit.text()
-        if not os.path.isdir(start_dir):
-
-             start_dir = os.path.expanduser("~")
-
+        current_dir = target_line_edit.text()
+        initial_dir = start_dir
+        if os.path.isdir(current_dir):
+            initial_dir = current_dir
+        elif not os.path.isdir(initial_dir):
+             initial_dir = os.path.expanduser("~")
 
         folder = QFileDialog.getExistingDirectory(
             self,
             "Seleziona Cartella",
-            start_dir
+            initial_dir
         )
         if folder:
             target_line_edit.setText(folder)
