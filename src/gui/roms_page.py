@@ -8,10 +8,10 @@ import logging
 
 class RomsPage(QWidget):
     """
-    Pagina della GUI dedicata alla visualizzazione e gestione
-    dello stato dei download (attivi, in coda, completati).
-    Versione corretta che mantiene la struttura abbellita ma usa la logica
-    originale (funzionante) per add/remove dei widget attivi.
+    GUI page dedicated to displaying and managing the status of downloads
+    (active, queued, completed).
+    Corrected version maintaining the embellished structure but using
+    the original (working) logic for adding/removing active widgets.
     """
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -19,7 +19,7 @@ class RomsPage(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        """Inizializza l'interfaccia utente della pagina."""
+        """Initializes the user interface of the page."""
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(15)
@@ -87,9 +87,9 @@ class RomsPage(QWidget):
 
     def add_active_download(self, game_name):
         """
-        Crea e aggiunge un widget per un nuovo download attivo,
-        se non esiste già. Usa la logica originale 'addWidget'.
-        Restituisce il widget creato o esistente.
+        Creates and adds a widget for a new active download,
+        if it doesn't already exist. Uses the original 'addWidget' logic.
+        Returns the created or existing widget.
         """
         widget = self.active_widgets.get(game_name)
         if not widget:
@@ -97,74 +97,74 @@ class RomsPage(QWidget):
             widget = DownloadQueueItemWidget(game_data)
             self.active_downloads_layout.addWidget(widget)
             self.active_widgets[game_name] = widget
-            logging.debug(f"RomsPage: Aggiunto widget attivo per {game_name}")
+            logging.debug(f"RomsPage: Added active widget for {game_name}")
             return widget
 
-        logging.debug(f"RomsPage: Widget attivo per {game_name} già esistente.")
+        logging.debug(f"RomsPage: Active widget for {game_name} already exists.")
         return widget
 
 
     def update_active_download(self, game_name, percent):
-        """Aggiorna la barra di progresso del widget attivo specificato."""
+        """Updates the progress bar of the specified active widget."""
         widget = self.active_widgets.get(game_name)
         if widget:
             if hasattr(widget, 'update_progress'):
                 widget.update_progress(percent)
             else:
-                 logging.warning(f"Widget per {game_name} non ha il metodo 'update_progress'.")
+                 logging.warning(f"Widget for {game_name} does not have 'update_progress' method.")
 
 
     def update_active_stats(self, game_name, speed_mb, peak_mb):
-        """Aggiorna le statistiche (velocità, picco) del widget attivo specificato."""
+        """Updates the statistics (speed, peak) of the specified active widget."""
         widget = self.active_widgets.get(game_name)
         if widget:
              if hasattr(widget, 'update_stats'):
                 try:
                     widget.update_stats(float(speed_mb), float(peak_mb))
                 except (ValueError, TypeError):
-                    logging.warning(f"Valori stats non validi per {game_name}: speed={speed_mb}, peak={peak_mb}")
+                    logging.warning(f"Invalid stats values for {game_name}: speed={speed_mb}, peak={peak_mb}")
                     widget.update_stats(0.0, 0.0)
              else:
-                 logging.warning(f"Widget per {game_name} non ha il metodo 'update_stats'.")
+                 logging.warning(f"Widget for {game_name} does not have 'update_stats' method.")
 
 
     def remove_active_download(self, game_name):
         """
-        Rimuove il widget per un download attivo dall'interfaccia.
-        Usa la logica originale.
+        Removes the widget for an active download from the interface.
+        Uses the original logic.
         """
         widget = self.active_widgets.pop(game_name, None)
         if widget:
-            logging.debug(f"RomsPage: Rimuovendo widget per {game_name}.")
+            logging.debug(f"RomsPage: Removing widget for {game_name}.")
             try:
                 widget.setParent(None)
                 widget.deleteLater()
-                logging.debug(f"RomsPage: Widget per {game_name} rimosso e schedulato per deleteLater.")
+                logging.debug(f"RomsPage: Widget for {game_name} removed and scheduled for deleteLater.")
             except Exception as e:
-                logging.error(f"Errore durante la rimozione/eliminazione del widget per {game_name}: {e}")
+                logging.error(f"Error during removal/deletion of widget for {game_name}: {e}")
 
 
     def add_to_queue(self, game_name):
-        """Aggiunge un nome di gioco alla lista della coda visiva."""
+        """Adds a game name to the visual queue list."""
         self.queue_list.addItem(game_name)
         self.queue_list.scrollToBottom()
 
     def remove_from_queue(self, game_name):
-        """Rimuove un gioco dalla lista della coda visiva."""
+        """Removes a game from the visual queue list."""
         items = self.queue_list.findItems(game_name, Qt.MatchFlag.MatchExactly)
         if items:
             row = self.queue_list.row(items[0])
             self.queue_list.takeItem(row)
 
     def add_completed_download(self, game_name_with_info):
-        """Aggiunge una voce alla lista dei download completati."""
+        """Adds an entry to the completed downloads list."""
         self.completed_list.addItem(game_name_with_info)
         self.completed_list.scrollToBottom()
 
     def update_global_progress(self, downloaded, total, global_speed_mb, global_peak_mb):
         """
-        Aggiorna la barra di progresso globale e le statistiche globali.
-        Velocità e picco sono attesi in MB/s.
+        Updates the global progress bar and global statistics labels.
+        Speed and peak are expected in MB/s.
         """
         percent = int(downloaded / total * 100) if total > 0 else 0
         percent = min(percent, 100)

@@ -36,24 +36,23 @@ PRETTY_LABELS = {
     "input_screenshot": "Screenshot", "input_toggle_fullscreen": "Schermo Intero", "input_volume_up": "Volume Su", "input_volume_down": "Volume Giù",
     "input_shader_next": "Shader Successivo", "input_shader_prev": "Shader Precedente", "input_shader_toggle": "Attiva/Disattiva Shader",
     "input_state_slot_increase": "Slot Stato (+)", "input_state_slot_decrease": "Slot Stato (-)",
-    "video_vsync": "V-Sync", # Etichetta per nuova opzione
-    "video_driver": "Driver Video", # Etichetta per nuova opzione
+    "video_vsync": "V-Sync",
+    "video_driver": "Driver Video",
 }
 
 CORE_USEFUL_OPTIONS = ["video_scale", "audio_volume", "input_driver"]
 CORE_COMMON_ALLOCATED_OPTIONS = [
     "audio_driver", "video_aspect_ratio", "video_fullscreen",
-    "video_vsync", # Aggiunto qui o gestito separatamente
+    "video_vsync",
     "menu_font_color_red", "menu_font_color_green", "menu_font_color_blue"
 ]
 
-# Lista dei driver video comuni (potrebbe variare per OS)
 VIDEO_DRIVERS = ["gl", "glcore", "vulkan", "d3d11", "d3d12", "metal", "sdl2", "null"]
 
 class HotkeyInput(QLineEdit):
     """
-    Un QLineEdit personalizzato per catturare un singolo tasto o combinazione
-    di tasti quando viene cliccato. (Versione corretta)
+    A custom QLineEdit for capturing a single key or key combination upon click.
+    (Corrected version)
     """
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -66,11 +65,13 @@ class HotkeyInput(QLineEdit):
         self.setPlaceholderText("Clicca per registrare")
 
     def _update_style(self):
+        """Forces a style update to apply QSS changes."""
         self.style().unpolish(self)
         self.style().polish(self)
         self.update()
 
     def mousePressEvent(self, event):
+        """Activates recording mode on click."""
         if not self.recording:
             self.recording = True
             self.setProperty("recording", True)
@@ -81,6 +82,7 @@ class HotkeyInput(QLineEdit):
         super().mousePressEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent):
+        """Captures the pressed key during recording."""
         if self.recording:
             self.timer.stop()
             self.recording = False
@@ -109,7 +111,7 @@ class HotkeyInput(QLineEdit):
             if modifiers & Qt.KeyboardModifier.MetaModifier: mod_list.append("meta")
 
             if not key_text:
-                 logging.warning("keyPressEvent: key_text vuoto dopo l'elaborazione.")
+                 logging.warning("keyPressEvent: key_text empty after processing.")
                  return
 
             converted_key = convert_binding(key_text)
@@ -125,6 +127,7 @@ class HotkeyInput(QLineEdit):
             super().keyPressEvent(event)
 
     def on_timeout(self):
+        """Handles timeout if no key is pressed."""
         if self.recording:
             self.recording = False
             self.setProperty("recording", False)
@@ -132,6 +135,7 @@ class HotkeyInput(QLineEdit):
             self.setPlaceholderText("Timeout! Clicca")
 
     def focusOutEvent(self, event):
+        """Cancels recording if focus is lost."""
         if self.recording:
             self.timer.stop()
             self.recording = False
@@ -140,12 +144,10 @@ class HotkeyInput(QLineEdit):
             self.setPlaceholderText("Annullato! Clicca")
         super().focusOutEvent(event)
 
-# --- Fine Classe HotkeyInput ---
-
 class ControlsPage(QWidget):
     """
-    Pagina unificata per configurare controlli P1, tasti rapidi globali
-    e impostazioni specifiche del core per diverse console.
+    Unified page for configuring P1 controls, global hotkeys,
+    and core-specific settings for different consoles.
     """
     def __init__(self, config_folder, parent=None):
         super().__init__(parent)
@@ -154,7 +156,7 @@ class ControlsPage(QWidget):
             try:
                 os.makedirs(self.config_folder)
             except OSError as e:
-                logging.error(f"Impossibile creare cartella config '{self.config_folder}': {e}")
+                logging.error(f"Cannot create config folder '{self.config_folder}': {e}")
 
         self.current_console = None
         self.current_core_base = None
@@ -171,7 +173,7 @@ class ControlsPage(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        """Inizializza l'interfaccia utente della pagina con le tab."""
+        """Initializes the user interface for the page with tabs."""
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(15)
@@ -212,7 +214,7 @@ class ControlsPage(QWidget):
             self.load_bindings_and_settings(self.console_combo.currentText())
 
     def _create_scrollable_tab(self):
-        """Crea un widget base per una tab contenente uno QScrollArea."""
+        """Creates a base widget for a tab containing a QScrollArea."""
         tab_widget = QWidget()
         tab_layout = QVBoxLayout(tab_widget)
         tab_layout.setContentsMargins(5, 5, 5, 5)
@@ -228,7 +230,7 @@ class ControlsPage(QWidget):
         return tab_widget
 
     def _get_scroll_content_widget(self, tab_index):
-        """Ottiene il widget contenitore interno dello QScrollArea di una tab specifica."""
+        """Gets the inner container widget of a specific tab's QScrollArea."""
         try:
              tab_main_widget = self.tab_widget.widget(tab_index)
              if tab_main_widget:
@@ -236,14 +238,14 @@ class ControlsPage(QWidget):
                  if scroll_area:
                      return scroll_area.widget()
         except Exception as e:
-             logging.error(f"Errore nell'ottenere scroll content widget per tab {tab_index}: {e}")
+             logging.error(f"Error getting scroll content widget for tab {tab_index}: {e}")
         return None
 
     def _load_config_file(self, file_path):
-        """Carica un file di configurazione (.cfg) e restituisce un dizionario."""
+        """Loads a configuration file (.cfg) and returns a dictionary."""
         settings_dict = {}
         if not os.path.exists(file_path):
-            logging.warning(f"File di configurazione non trovato: {file_path}")
+            logging.warning(f"Configuration file not found: {file_path}")
             return settings_dict
 
         try:
@@ -258,18 +260,18 @@ class ControlsPage(QWidget):
                         value = value.strip().strip('"').strip("'")
                         settings_dict[key] = value
         except Exception as e:
-            logging.error(f"Errore nel caricamento di '{file_path}': {e}")
+            logging.error(f"Error loading '{file_path}': {e}")
             QMessageBox.critical(self, "Errore Caricamento", f"Impossibile caricare {os.path.basename(file_path)}:\n{e}")
         return settings_dict
 
     def load_bindings_and_settings(self, console_name):
-        """Carica tutte le impostazioni (P1, globali, core) per la console selezionata."""
-        logging.info(f"Caricamento impostazioni per: {console_name}")
+        """Loads all settings (P1, global, core) for the selected console."""
+        logging.info(f"Loading settings for: {console_name}")
         self.current_console = console_name
         self.current_core_base = DEFAULT_CORES.get(console_name)
 
         if not self.current_core_base:
-            QMessageBox.critical(self, "Errore", f"Core base non definito per {console_name} in config.py")
+            QMessageBox.critical(self, "Errore", f"Core base not defined for {console_name} in config.py")
             self._clear_all_tabs()
             return
 
@@ -284,7 +286,7 @@ class ControlsPage(QWidget):
         self._populate_core_settings_tab()
 
     def _clear_layout(self, layout):
-        """Rimuove tutti i widget da un layout."""
+        """Removes all widgets from a layout."""
         if layout is None: return
         while layout.count():
             item = layout.takeAt(0)
@@ -297,7 +299,7 @@ class ControlsPage(QWidget):
                     self._clear_layout(inner_layout)
 
     def _clear_all_tabs(self):
-         """Pulisce il contenuto di tutte le tab."""
+         """Clears the content of all setting tabs."""
          try:
              self._clear_layout(self._get_scroll_content_widget(0).layout() if self._get_scroll_content_widget(0) else None)
              self._clear_layout(self._get_scroll_content_widget(1).layout() if self._get_scroll_content_widget(1) else None)
@@ -306,10 +308,10 @@ class ControlsPage(QWidget):
              self.global_hotkey_widgets.clear()
              self.core_setting_widgets.clear()
          except Exception as e:
-              logging.error(f"Errore durante la pulizia delle tab: {e}")
+              logging.error(f"Error clearing setting tabs: {e}")
 
     def _populate_p1_controls_tab(self):
-        """Popola la tab 'Controlli Giocatore 1'."""
+        """Populates the 'Player 1 Controls' tab."""
         content_widget = self._get_scroll_content_widget(0)
         if not content_widget: return
 
@@ -345,7 +347,7 @@ class ControlsPage(QWidget):
         layout.setRowStretch(row, 1)
 
     def _populate_global_hotkeys_tab(self):
-        """Popola la tab 'Tasti Rapidi Globali'."""
+        """Populates the 'Global Hotkeys' tab."""
         content_widget = self._get_scroll_content_widget(1)
         if not content_widget: return
 
@@ -381,7 +383,7 @@ class ControlsPage(QWidget):
             self.global_hotkey_widgets[command] = input_widget
 
     def _populate_core_settings_tab(self):
-        """Popola la tab 'Impostazioni Core', includendo V-Sync e Video Driver."""
+        """Populates the 'Core Settings' tab, including V-Sync and Video Driver."""
         content_widget = self._get_scroll_content_widget(2)
         if not content_widget: return
 
@@ -395,41 +397,30 @@ class ControlsPage(QWidget):
 
         self.core_setting_widgets.clear()
 
-        # --- Gestione Specifica V-Sync ---
         vsync_key = "video_vsync"
         vsync_label = PRETTY_LABELS.get(vsync_key, "V-Sync") + ":"
-        # Default a 'false' se non trovato
         vsync_current_value = self.core_settings.get(vsync_key, "false").lower()
         vsync_widget = QCheckBox()
         vsync_widget.setChecked(vsync_current_value == "true")
         layout.addRow(vsync_label, vsync_widget)
-        self.core_setting_widgets[vsync_key] = vsync_widget # Salva riferimento
-        # ------------------------------------
+        self.core_setting_widgets[vsync_key] = vsync_widget
 
-        # --- Gestione Specifica Video Driver ---
         vdriver_key = "video_driver"
         vdriver_label = PRETTY_LABELS.get(vdriver_key, "Driver Video") + ":"
-        # Default a 'gl' se non trovato o vuoto
         vdriver_current_value = self.core_settings.get(vdriver_key) or "gl"
         vdriver_widget = QComboBox()
-        vdriver_widget.addItems(VIDEO_DRIVERS) # Aggiunge opzioni definite globalmente
-        # Seleziona il valore corrente nel ComboBox
+        vdriver_widget.addItems(VIDEO_DRIVERS)
         current_index = vdriver_widget.findText(vdriver_current_value, Qt.MatchFlag.MatchExactly | Qt.MatchFlag.MatchCaseSensitive)
         if current_index >= 0:
             vdriver_widget.setCurrentIndex(current_index)
         else:
-            # Se il valore salvato non è nella lista, aggiungilo temporaneamente e selezionalo
-            # o seleziona il default 'gl'
-            logging.warning(f"Valore salvato '{vdriver_current_value}' per {vdriver_key} non trovato nella lista standard. Seleziono 'gl'.")
+            logging.warning(f"Saved value '{vdriver_current_value}' for {vdriver_key} not found in standard list. Selecting 'gl'.")
             default_index = vdriver_widget.findText("gl")
             if default_index >=0: vdriver_widget.setCurrentIndex(default_index)
-            # Alternativa: vdriver_widget.addItem(vdriver_current_value); vdriver_widget.setCurrentText(vdriver_current_value)
 
         layout.addRow(vdriver_label, vdriver_widget)
-        self.core_setting_widgets[vdriver_key] = vdriver_widget # Salva riferimento
-        # --------------------------------------
+        self.core_setting_widgets[vdriver_key] = vdriver_widget
 
-        # Gestione altre opzioni core (da liste, escludendo quelle già gestite)
         options_already_handled = {vsync_key, vdriver_key}
         p1_keys = set(CONSOLE_KEYBINDINGS.get(self.current_console, {}).keys())
         options_to_exclude = options_already_handled.union(p1_keys)
@@ -452,9 +443,8 @@ class ControlsPage(QWidget):
 
             self.core_setting_widgets[key] = input_widget
 
-
     def on_save(self):
-        """Salva tutte le impostazioni modificate nei file .cfg appropriati."""
+        """Saves all modified settings to the appropriate .cfg files."""
         if not self.current_console or not self.current_core_base:
             QMessageBox.warning(self, "Errore", "Nessuna console/core valido selezionato.")
             return
@@ -491,15 +481,14 @@ class ControlsPage(QWidget):
                       all_keys_to_check_conflict[value] = command
         if has_conflict: return
 
-        # Raccogli Core Settings (inclusi VSync e Video Driver)
         for command, widget in self.core_setting_widgets.items():
             if isinstance(widget, QCheckBox):
                 value = "true" if widget.isChecked() else "false"
-            elif isinstance(widget, QComboBox): # Gestisci ComboBox per Video Driver
+            elif isinstance(widget, QComboBox):
                 value = widget.currentText()
-            else: # QLineEdit
+            else:
                 value = widget.text().strip()
-            core_values[command] = value # Salva il valore raccolto
+            core_values[command] = value
 
         success = True
         errors = []
@@ -517,7 +506,7 @@ class ControlsPage(QWidget):
             core_specific_values = {}
             converted_p1 = {cmd: convert_binding(val) for cmd, val in p1_values.items()}
             core_specific_values.update(converted_p1)
-            core_specific_values.update(core_values) # Aggiunge/sovrascrive con le core settings raccolte
+            core_specific_values.update(core_values)
 
             try:
                 update_emulator_config(self.core_config_path, core_specific_values)

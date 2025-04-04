@@ -9,7 +9,7 @@ from pyunpack import Archive
 import shutil
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
-from src.config import USER_DOWNLOADS_FOLDER, RETROARCH_EXTRACT_FOLDER
+from src.config import BASE_DIR, USER_DOWNLOADS_FOLDER, RETROARCH_EXTRACT_FOLDER
 from src.conversion import convert_binding
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
@@ -75,22 +75,45 @@ def format_space(bytes_value):
         return f"{bytes_value/(1024*1024):.1f} MB"
 
 def find_retroarch():
-    """Cerca l'eseguibile di RetroArch sul sistema."""
+    """Cerca l'eseguibile di RetroArch sul sistema, includendo il percorso relativo dell'app."""
+    # 1. Cerca nel PATH di sistema (modo preferito)
     path = shutil.which("retroarch")
-    if path:
+    if path and os.path.exists(path): # Aggiunto check exists per sicurezza con which
+        print(f"RetroArch trovato nel PATH: {path}")
         return path
 
+    # 2. Costruisci il percorso relativo basato sulla configurazione
+    # Determina il nome dell'eseguibile in base all'OS
+    exe_name = "retroarch.exe" if sys.platform.startswith("win") else "retroarch"
+    # Il percorso è RETROARCH_EXTRACT_FOLDER + nome eseguibile
+    relative_path_from_config = os.path.join(RETROARCH_EXTRACT_FOLDER, exe_name)
+
+    # Controlla se esiste nel percorso relativo definito in config.py
+    if os.path.exists(relative_path_from_config):
+        print(f"RetroArch trovato nel percorso relativo dell'app: {relative_path_from_config}")
+        return relative_path_from_config
+
+    # 3. Fallback: Cerca in percorsi comuni specifici del sistema operativo (come ultima risorsa)
+    possible = []
     if sys.platform.startswith("win"):
-        possible = [r"C:\RetroArch-Win64\retroarch.exe", r"C:\Program Files\RetroArch\retroarch.exe", f"{RETROARCH_EXTRACT_FOLDER}/retroarch.exe"]
+        # Rimuovi il percorso relativo già controllato sopra
+        possible = [r"C:\RetroArch-Win64\retroarch.exe", r"C:\Program Files\RetroArch\retroarch.exe"]
     elif sys.platform.startswith("linux"):
-        possible = ["/home/erpaffo/Scrivania/Roms-Downloader/emulator/retroarch", "/usr/bin/retroarch", "/usr/local/bin/retroarch"]
+        # Rimuovi percorsi hardcoded che potrebbero non essere corretti
+        possible = ["/usr/bin/retroarch", "/usr/local/bin/retroarch",
+                    # Aggiungi un percorso relativo alla directory base dell'app come fallback estremo
+                    os.path.join(BASE_DIR, "..", "app_data", "emulator", "RetroArch", "retroarch")] # Percorso relativo a src
     elif sys.platform.startswith("darwin"):
         possible = ["/Applications/RetroArch.app/Contents/MacOS/retroarch"]
-    else:
-        possible = []
+
+    print(f"RetroArch non trovato nel PATH o nel percorso relativo ({relative_path_from_config}). Controllo percorsi comuni: {possible}")
     for p in possible:
         if os.path.exists(p):
+            print(f"RetroArch trovato nel percorso comune: {p}")
             return p
+
+    # 4. Se non trovato da nessuna parte
+    print("RetroArch non trovato.")
     return None
 
 def is_retroarch_installed():

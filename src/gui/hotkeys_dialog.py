@@ -6,6 +6,7 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QKeyEvent, QKeySequence
 from src.key_bindings import KeyBindings
 from src.conversion import convert_binding
+import logging
 
 class HotkeyInput(QLineEdit):
     def __init__(self, parent=None):
@@ -14,46 +15,70 @@ class HotkeyInput(QLineEdit):
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.on_timeout)
-    
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setPlaceholderText("Clicca per registrare")
+
     def mousePressEvent(self, event):
-        # Quando l'utente clicca, attiva la modalità registrazione
-        self.clear()
-        self.setPlaceholderText("Premi un tasto...")
-        self.recording = True
-        self.timer.start(3000)  # 3 secondi di attesa
+        if not self.recording:
+            self.recording = True
+            self.clear()
+            self.setPlaceholderText("Premi un tasto...")
+            self.timer.start(3000)
         super().mousePressEvent(event)
-    
+
     def keyPressEvent(self, event: QKeyEvent):
         if self.recording:
             self.timer.stop()
             self.recording = False
-            # Ottieni il tasto premuto
-            key_text = event.text()
+            self.setPlaceholderText("Clicca per registrare")
+
+            key = event.key()
+            modifiers = event.modifiers()
+
+            if key in (Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt, Qt.Key.Key_Meta, Qt.Key.Key_unknown):
+                 self.setPlaceholderText("Tasto non valido")
+                 return
+
+            key_text = event.text().lower()
+            if not key_text or key < Qt.Key.Key_Space or key > Qt.Key.Key_ydiaeresis:
+                 seq = QKeySequence(key)
+                 key_text = seq.toString(QKeySequence.SequenceFormat.NativeText).lower()
+                 if '+' in key_text:
+                      key_text = key_text.split('+')[-1]
+
+            mod_list = []
+            if modifiers & Qt.KeyboardModifier.ControlModifier: mod_list.append("ctrl")
+            if modifiers & Qt.KeyboardModifier.AltModifier: mod_list.append("alt")
+            if modifiers & Qt.KeyboardModifier.ShiftModifier: mod_list.append("shift")
+            if modifiers & Qt.KeyboardModifier.MetaModifier: mod_list.append("meta")
+
             if not key_text:
-                # Per tasti non testuali (es. F1, etc.)
-                key_text = QKeySequence(event.key()).toString()
-            # Gestisci eventuali modificatori
-            modifiers = []
-            if event.modifiers() & Qt.ControlModifier:
-                modifiers.append("Ctrl")
-            if event.modifiers() & Qt.AltModifier:
-                modifiers.append("Alt")
-            if event.modifiers() & Qt.ShiftModifier:
-                modifiers.append("Shift")
-            if event.modifiers() & Qt.MetaModifier:
-                modifiers.append("Meta")
-            if modifiers:
-                key_text = "+".join(modifiers + [key_text])
-            # Converte il tasto nel mapping americano
+                 logging.warning("HotkeyInput.keyPressEvent: key_text vuoto.")
+                 return
+
             converted_key = convert_binding(key_text)
-            self.setText(converted_key)
+
+            if mod_list:
+                final_text = "+".join(mod_list + [converted_key])
+            else:
+                final_text = converted_key
+
+            self.setText(final_text)
         else:
             super().keyPressEvent(event)
-    
+
     def on_timeout(self):
-        # Timeout scattato senza ricevere input
-        self.recording = False
-        self.setPlaceholderText("Nessun tasto rilevato")
+        if self.recording:
+            self.recording = False
+            self.setPlaceholderText("Timeout! Clicca")
+
+    def focusOutEvent(self, event):
+        if self.recording:
+             self.timer.stop()
+             self.recording = False
+             self.setPlaceholderText("Annullato! Clicca")
+        super().focusOutEvent(event)
+
 
 class HotkeysDialog(QDialog):
     def __init__(self, bindings: KeyBindings, parent=None):
@@ -61,14 +86,17 @@ class HotkeysDialog(QDialog):
         self.bindings = bindings
         self.setWindowTitle("Configura Hotkeys")
 
-        # Suddividi i binding in "Controlli" e "Hotkeys"
         self.controls = {}
         self.others = {}
-        for command, value in self.bindings.bindings.items():
-            if command.startswith("input_player1_"):
-                self.controls[command] = value
-            else:
-                self.others[command] = value
+        if hasattr(bindings, 'bindings') and isinstance(bindings.bindings, dict):
+            for command, value in bindings.bindings.items():
+                if command.startswith("input_player1_"):
+                    self.controls[command] = value if value is not None else ""
+                else:
+                    self.others[command] = value if value is not None else ""
+        else:
+             logging.error("Oggetto bindings non valido passato a HotkeysDialog.")
+
 
         self.controls_widgets = {}
         self.hotkeys_widgets = {}
@@ -78,10 +106,10 @@ class HotkeysDialog(QDialog):
         self.tab_widget = QTabWidget()
 
         self.controls_tab = self.create_tab(self.controls, self.controls_widgets)
-        self.tab_widget.addTab(self.controls_tab, "Controlli")
+        self.tab_widget.addTab(self.controls_tab, "Controlli Giocatore 1")
 
         self.hotkeys_tab = self.create_tab(self.others, self.hotkeys_widgets)
-        self.tab_widget.addTab(self.hotkeys_tab, "Hotkeys")
+        self.tab_widget.addTab(self.hotkeys_tab, "Tasti Rapidi Globali")
 
         main_layout.addWidget(self.tab_widget)
 
@@ -89,62 +117,68 @@ class HotkeysDialog(QDialog):
         btn_save.clicked.connect(self.on_save)
         main_layout.addWidget(btn_save)
 
-        self.setLayout(main_layout)
-
     def create_tab(self, commands_dict, widget_map):
         tab = QWidget()
         grid = QGridLayout(tab)
-        col_count = 2  # Numero di colonne
+        col_count = 2
         index = 0
-        for command, value in commands_dict.items():
+        for command in sorted(commands_dict.keys()):
+            value = commands_dict[command]
+
             container = QWidget()
             vbox = QVBoxLayout(container)
-            label = QLabel(command)
+            vbox.setContentsMargins(0,0,0,0)
+            label = QLabel(command) 
             vbox.addWidget(label)
-            # Se il valore è "true" o "false", usa un QCheckBox
-            if value.strip().lower() in ["true", "false"]:
+
+            value_str = str(value).strip().lower() 
+
+            if value_str in ["true", "false"]:
                 input_widget = QCheckBox()
-                input_widget.setChecked(value.strip().lower() == "true")
+                input_widget.setChecked(value_str == "true")
             else:
-                # Usa il widget HotkeyInput aggiornato per la registrazione del tasto
                 input_widget = HotkeyInput()
-                input_widget.setText(value)
+                input_widget.setText(str(value) if value is not None else "")
+
             vbox.addWidget(input_widget)
-            container.setLayout(vbox)
             grid.addWidget(container, index // col_count, index % col_count)
             widget_map[command] = input_widget
             index += 1
-        tab.setLayout(grid)
         return tab
 
     def on_save(self):
-        # Aggiorna i binding per "Controlli"
-        for command, widget in self.controls_widgets.items():
+        new_bindings_temp = {} 
+        has_conflict = False
+
+        all_widgets = {**self.controls_widgets, **self.hotkeys_widgets}
+
+        for command, widget in all_widgets.items():
             if isinstance(widget, QCheckBox):
                 new_value = "true" if widget.isChecked() else "false"
             else:
-                new_value = widget.text().strip()
-            if new_value:
-                if not self.bindings.set_binding(command, new_value):
-                    QMessageBox.warning(self, "Conflitto",
-                        f"Il tasto '{new_value}' è già in uso per un altro comando. Scegliere un altro tasto.")
-                    return
+                new_value = widget.text().strip().lower()
+                if not new_value:
+                     new_value = "nul"
 
-        # Aggiorna i binding per "Hotkeys"
-        for command, widget in self.hotkeys_widgets.items():
-            if isinstance(widget, QCheckBox):
-                new_value = "true" if widget.isChecked() else "false"
+            if not isinstance(widget, QCheckBox) and new_value != "nul":
+                if new_value in new_bindings_temp:
+                     conflict_command = new_bindings_temp[new_value]
+                     QMessageBox.warning(self, "Conflitto Tasti",
+                                           f"Il tasto '{new_value}' è assegnato sia a '{command}' che a '{conflict_command}'.")
+                     has_conflict = True
+                     break
+                else:
+                     new_bindings_temp[new_value] = command
+
+            if hasattr(self.bindings, 'bindings'):
+                 self.bindings.bindings[command] = new_value
             else:
-                new_value = widget.text().strip()
-            if new_value:
-                if not self.bindings.set_binding(command, new_value):
-                    QMessageBox.warning(self, "Conflitto",
-                        f"Il tasto '{new_value}' è già in uso per un altro comando. Scegliere un altro tasto.")
-                    return
+                 logging.error("Attributo 'bindings' non trovato nell'oggetto bindings.")
+                 QMessageBox.critical(self,"Errore Interno", "Oggetto bindings non valido.")
+                 return
 
-        if not self.bindings.validate_all_bindings():
-            QMessageBox.critical(self, "Errore di conflitto",
-                                 "Rilevati conflitti nei binding. Correggere prima di salvare.")
-            return
 
+        if has_conflict:
+            return # Non chiudere se c'è conflitto
+        
         self.accept()
