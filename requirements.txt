@@ -1,4 +1,9 @@
 PySide6
-BeautifulSoup4
 requests
+beautifulsoup4
+lxml
+pyunpack
+patool
 platformdirs
+pyinstaller
+py7zr

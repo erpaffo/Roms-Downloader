@@ -135,8 +135,7 @@ class LibraryPage(QWidget):
         self.load_library()
 
     def launch_game_from_library(self, item: QTreeWidgetItem, column: int):
-        """Launches the selected game using RetroArch on double-click.
-           Creates a default core config file if it doesn't exist."""
+        """Launches the selected game using the system's RetroArch and bundled cores."""
         if item.childCount() > 0 or not item.data(0, Qt.ItemDataRole.UserRole):
             return
 
@@ -146,7 +145,7 @@ class LibraryPage(QWidget):
 
         retroarch_exe = find_retroarch()
         if not retroarch_exe:
-            QMessageBox.critical(self, "Errore Avvio", "Eseguibile di RetroArch non trovato.")
+            QMessageBox.critical(self, "Errore Avvio", "Eseguibile di RetroArch non trovato sul sistema.")
             return
 
         core_base = DEFAULT_CORES.get(console_name)
@@ -157,7 +156,7 @@ class LibraryPage(QWidget):
         core_filename = core_base + CORE_EXT
         core_path = os.path.join(CORES_FOLDER, core_filename)
         if not os.path.exists(core_path):
-            QMessageBox.critical(self, "Errore Core", f"File del core non trovato: {core_path}")
+            QMessageBox.critical(self, "Errore Core", f"File del core non trovato nel pacchetto:\n{core_path}")
             return
 
         core_config_filename = core_base + ".cfg"
@@ -167,29 +166,84 @@ class LibraryPage(QWidget):
         if not os.path.exists(core_config_path):
             logging.info(f"File config per '{console_name}' non trovato. Tentativo di creazione default...")
             if not create_default_core_config(core_config_path, console_name, core_base):
-                QMessageBox.warning(self, "Errore Creazione Config",
-                                    f"Impossibile creare il file di configurazione predefinito:\n{core_config_path}\n"
-                                    "Il gioco potrebbe non avviarsi o usare impostazioni errate.")
+                QMessageBox.warning(self, "Errore Creazione Config", f"Impossibile creare il file config predefinito:\n{core_config_path}")
                 core_config_path = None
                 config_created_or_exists = False
 
-
-        command = [retroarch_exe]
+        command_list = [retroarch_exe] # Usa una lista per Popen
 
         if config_created_or_exists and core_config_path:
-            command.extend(["--config", core_config_path])
-            logging.info(f"Using core-specific config file: {core_config_path}")
+            command_list.extend(["--config", core_config_path])
+            logging.info(f"Using user's core-specific config file: {core_config_path}")
         else:
             logging.warning(f"Launching without specific config file for {console_name}.")
 
-        command.extend(["-L", core_path, rom_path])
+        command_list.extend(["-L", core_path, rom_path, "-v"])
 
         try:
-            logging.info(f"Launching command: {' '.join(command)}")
-            subprocess.Popen(command)
+            logging.info(f"Attempting to launch command: {' '.join(command_list)}")
+
+            # --- INIZIO MODIFICHE SUBPROCESS ---
+
+            # 1. Passa l'ambiente della tua app a Popen
+            process_env = os.environ.copy()
+            # Logga alcune variabili potenzialmente importanti per il debug
+            logging.debug(f"Launching with Environment:")
+            logging.debug(f"  DISPLAY={process_env.get('DISPLAY')}")
+            logging.debug(f"  WAYLAND_DISPLAY={process_env.get('WAYLAND_DISPLAY')}")
+            logging.debug(f"  XDG_RUNTIME_DIR={process_env.get('XDG_RUNTIME_DIR')}")
+            logging.debug(f"  DBUS_SESSION_BUS_ADDRESS={process_env.get('DBUS_SESSION_BUS_ADDRESS')}")
+            logging.debug(f"  PWD={process_env.get('PWD')}") # Directory di lavoro corrente
+            logging.debug(f"  LD_LIBRARY_PATH={process_env.get('LD_LIBRARY_PATH')}") # Percorso librerie
+
+            # 2. Usa Popen ma cattura stdout/stderr per vedere eventuali errori
+            # Nota: leggere stdout/stderr in modo non bloccante è complesso.
+            # Questo catturerà solo l'output iniziale o errori immediati.
+            # Un'alternativa è usare QProcess di Qt.
+            process = subprocess.Popen(command_list,
+                                       env=process_env, # Passa l'ambiente copiato
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       text=True,
+                                       encoding='utf-8',
+                                       errors='replace')
+
+            # Leggi l'output iniziale (potrebbe bloccarsi se RA non esce subito)
+            # Usiamo communicate con un timeout breve per leggere output/errori iniziali
+            try:
+                stdout, stderr = process.communicate(timeout=2) # Timeout di 2 secondi
+                if stdout:
+                     logging.info(f"RetroArch stdout (initial):\n{stdout}")
+                if stderr:
+                     logging.error(f"RetroArch stderr (initial):\n{stderr}")
+            except subprocess.TimeoutExpired:
+                 logging.info(f"RetroArch process started successfully (PID: {process.pid}) and did not exit within timeout.")
+                 # Il processo è partito, probabilmente sta girando correttamente in background
+                 # Puoi terminare il processo se necessario: process.terminate() / process.kill()
+            except Exception as comm_err:
+                 logging.error(f"Error communicating with Popen process: {comm_err}")
+
+
+            # Verifica se il processo è terminato subito con un errore
+            # Poll non aspetta, ritorna None se è ancora in esecuzione
+            return_code = process.poll()
+            if return_code is not None and return_code != 0:
+                 logging.error(f"RetroArch process exited immediately with error code: {return_code}")
+                 # Leggi eventuali errori residui
+                 stdout, stderr = process.communicate()
+                 if stderr:
+                      logging.error(f"RetroArch stderr (after exit):\n{stderr}")
+                 QMessageBox.warning(self, "Errore Avvio RetroArch", f"RetroArch si è chiuso inaspettatamente (codice: {return_code}). Controlla i log dell'applicazione.")
+
+
+            # Se arriva qui senza errori o timeout, il processo è stato lanciato
+            logging.info(f"RetroArch process launched (PID: {process.pid}). Check RetroArch window or logs for further details.")
+
+            # --- FINE MODIFICHE SUBPROCESS ---
+
         except OSError as e:
-            logging.error(f"Failed to execute command: {' '.join(command)}. Error: {e}")
-            QMessageBox.critical(self, "Errore Avvio Sistema", f"Impossibile eseguire il comando:\n{' '.join(command)}\nErrore: {e}")
+            logging.error(f"OSError launching command: {' '.join(command_list)}. Error: {e}")
+            QMessageBox.critical(self, "Errore Avvio Sistema", f"Impossibile eseguire il comando:\n{' '.join(command_list)}\nErrore: {e}")
         except Exception as e:
             logging.exception(f"Unexpected error launching RetroArch: {e}")
             QMessageBox.critical(self, "Errore Imprevisto", f"Errore imprevisto durante l'avvio di RetroArch:\n{e}")
