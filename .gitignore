@@ -21,3 +21,4 @@ build_deb.sh
 Dockerfile
 output_deb/
 cmd.sh
+.env

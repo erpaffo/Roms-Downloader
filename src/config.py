@@ -252,3 +252,21 @@ def add_console(name, link):
         logging.info(f"Console '{name}' added/updated at runtime.")
     else:
         logging.warning("Attempted to add console with empty name or link.")
+
+METADATA_FOLDER = os.path.join(USER_DATA_DIR, "metadata")
+COVERS_FOLDER = os.path.join(METADATA_FOLDER, "covers")
+
+# Crea le cartelle se non esistono
+if not os.path.exists(METADATA_FOLDER):
+    try:
+        os.makedirs(METADATA_FOLDER, exist_ok=True)
+        logging.info(f"Cartella Metadati creata: {METADATA_FOLDER}")
+    except OSError as e:
+        logging.error(f"Impossibile creare cartella Metadati '{METADATA_FOLDER}': {e}")
+
+if not os.path.exists(COVERS_FOLDER):
+    try:
+        os.makedirs(COVERS_FOLDER, exist_ok=True)
+        logging.info(f"Cartella Copertine creata: {COVERS_FOLDER}")
+    except OSError as e:
+        logging.error(f"Impossibile creare cartella Copertine '{COVERS_FOLDER}': {e}")

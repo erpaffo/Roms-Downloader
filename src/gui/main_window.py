@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QPlainTextEdit, QTreeWidget, QListWidget, QListWidgetItem, QProgressBar, QSizePolicy, QSplitter,
     QStackedWidget, QMessageBox, QSpinBox, QInputDialog, QSystemTrayIcon, QMenuBar, QMenu, QApplication
 )
-from PySide6.QtCore import Qt, QThread, QSize
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtCore import Qt, QThread, QSize, QEvent
+from PySide6.QtGui import QIcon, QAction, QCloseEvent
 from PySide6.QtWidgets import QFileDialog
 from src.gui.roms_page import RomsPage
 from src.config import (
@@ -680,3 +680,69 @@ class MainWindow(QWidget):
             self.log(f"Impostazioni generali aggiornate: Cartella='{USER_DOWNLOADS_FOLDER}', Max DL={MAX_CONCURRENT_DOWNLOADS}")
             if hasattr(self, 'library_page'):
                 self.library_page.load_library()
+
+    def closeEvent(self, event: QCloseEvent):
+        logging.info("Evento di chiusura MainWindow ricevuto.")
+
+        if self.download_manager_thread and self.download_manager_thread.isRunning():
+            reply = QMessageBox.question(self, "Download in Corso",
+                                        "Ci sono download attivi. Sei sicuro di voler uscire?\n"
+                                        "I download in corso verranno interrotti.",
+                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                                        QMessageBox.StandardButton.Cancel)
+            if reply == QMessageBox.StandardButton.Cancel:
+                logging.info("Chiusura annullata dall'utente a causa di download attivi.")
+                event.ignore()
+                return
+            else:
+                logging.warning("Uscita confermata con download attivi. Interruzione download...")
+                self.cancel_downloads(silent=True)
+
+        logging.debug("Chiamata a QApplication.closeAllWindows()...")
+        closed_all = QApplication.closeAllWindows()
+
+        if not closed_all:
+            logging.warning("closeAllWindows() ha restituito False, ma si procede con la chiusura della MainWindow.")
+
+        logging.debug("Accettazione evento di chiusura per MainWindow.")
+        event.accept()
+
+    def cancel_downloads(self, silent=False):
+        worker_existed = False
+        if self.download_manager_worker:
+            worker_existed = True
+            if not silent: self.log("Annullamento download in corso...")
+            self.download_manager_worker.cancel_all()
+
+        if self.download_manager_thread and self.download_manager_thread.isRunning():
+             self.download_manager_thread.quit()
+             if not self.download_manager_thread.wait(1500):
+                 logging.warning("Thread DownloadManager non terminato entro 1.5s dopo quit().")
+
+        self._clear_download_worker_refs()
+
+        if hasattr(self, 'btn_start_downloads'): self.btn_start_downloads.setEnabled(True)
+        if hasattr(self, 'btn_cancel_downloads'): self.btn_cancel_downloads.setEnabled(False)
+        self.download_queue.clear()
+        if hasattr(self, 'waiting_queue_list'): self.update_waiting_queue_list()
+        if hasattr(self, 'active_downloads_layout'):
+             for widget in self.active_downloads_widgets.values():
+                 if widget:
+                     widget.setParent(None)
+                     widget.deleteLater()
+             self.active_downloads_widgets.clear()
+        if hasattr(self, 'roms_page'):
+             for game_name in list(self.roms_active_download_widgets.keys()):
+                self.roms_page.remove_active_download(game_name)
+             self.roms_active_download_widgets.clear()
+             if hasattr(self.roms_page, 'queue_list'): self.roms_page.queue_list.clear()
+             if hasattr(self.roms_page, 'update_global_progress'): self.roms_page.update_global_progress(0, 0, 0, 0)
+
+        self.roms_progress_stats.clear()
+        self.roms_peak_speeds.clear()
+        self.last_speed.clear()
+
+        if hasattr(self, 'overall_progress_bar'): self.overall_progress_bar.setValue(0)
+
+        if worker_existed and not silent:
+            self.log("Download annullati.")

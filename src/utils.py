@@ -15,6 +15,8 @@ from src.console_keybindings import CONSOLE_KEYBINDINGS
 from src.conversion import convert_binding
 from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.config import CORE_SETTINGS_DEFAULTS
+from urllib.parse import unquote # <--- Aggiungi import
+
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
 
@@ -196,3 +198,76 @@ def create_default_core_config(core_config_path: str, console_name: str, core_ba
     except Exception as e:
         logging.exception(f"Errore imprevisto durante la creazione del file config default '{core_config_path}': {e}")
         return False
+
+def clean_rom_title(filename):
+    """Pulisce il nome del file ROM rimuovendo tag comuni, estensione, ecc."""
+    if not filename:
+        return ""
+
+    try:
+        name_decoded = unquote(filename)
+    except Exception as e:
+        logging.warning(f"Errore decodifica URL per '{filename}': {e}")
+        name_decoded = filename
+
+    name_without_ext, _ = os.path.splitext(name_decoded)
+    
+    cleaned = name_without_ext
+    logging.debug(f"Pulizia titolo: Inizio con '{cleaned}'")
+
+    patterns_to_remove = [
+        # 1. Tag Dump/Info tra Quadre (spesso all'inizio o fine)
+        r'^\s*\[.*?\]\s*',        
+        r'\s*\[.*?\]\s*$',        
+        # 2. Tag Revisione/Versione Specifici
+        r'\s*\((?:Rev|v|Version|Ver)\s*[\w\.]+\)\s*',
+        # 3. Tag Beta/Proto/Demo/Etc.
+        r'\s*\((?:Beta|Proto|Sample|Demo|Pre-Release|Promo|Test)\w*\)\s*',
+        # 4. Tag Regione/Lingua (più robusto)
+        r'\s*\(\s*(\b(?:USA|Europe|World|Japan|France|Germany|Spain|Italy|Korea|China|Australia|Brazil|Netherlands|Sweden|Denmark|Finland|Russia|En|Fr|De|Es|It|Ja|Ko|Zh|Nl|Pt|Sv|No|Da|Fi|Ru|Pl|Cz|Hu|Tr)\b\s*,?\s*)+\)\s*',
+        # 5. Tag Disco/Traccia
+        r'\s*\(Disc\s*\d+(?:-\d+)?\s*(?:of\s*\d+)?\)\s*',
+        r'\s*\(Track\s*\d+\)\s*',
+        r'\s*\((?:Bonus|Soundtrack|Demo)\s*Disc\)\s*',
+        # 6. Tag Specifici (NDSi Enhanced, etc.) - Aggiungine altri se necessario
+        r'\s*\((?:NDSi Enhanced|DSi Enhanced|GBC Enhanced|SGB Enhanced)\)\s*',
+        r'\s*\((?:Unl|Pirate|Hack|Translated|Public Domain|PD|Homebrew)\w*\)\s*',
+        r'\s*\((?:Alt|Sample|Remaster|Remix)\w*\)\s*',
+        # 7. Parentesi con date (es. YYYY-MM-DD o Anno) alla fine
+        r'\s*\(\s*\d{4}(?:-\d{2}-\d{2})?\s*\)\s*$',
+        # 8. Rimuovi (tm), (r) alla fine delle parole
+        r'\b(?:™|\(tm\)|\(r\)|®)\b',
+        # 9. Rimuovi parentesi/quadre vuote o con solo spazi, rimaste dopo le pulizie
+        r'\s*\(+\s*\)+\s*',
+        r'\s*\[+\s*\]+\s*',
+    ]
+
+    previous_cleaned = ""
+    loops = 0
+    while previous_cleaned != cleaned and loops < 10: 
+        previous_cleaned = cleaned
+        for i, pattern in enumerate(patterns_to_remove):
+            before_sub = cleaned
+            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE).strip()
+        cleaned = ' '.join(cleaned.split()).strip()
+        cleaned = re.sub(r'^[_\-\s]+|[_\-\s]+$', '', cleaned).strip()
+        loops += 1
+
+    logging.debug(f"Pulizia titolo: Risultato finale '{cleaned}'")
+
+    return cleaned if cleaned else name_without_ext
+
+def find_console_for_rom(library_data_structure, rom_path):
+     """
+     Trova il nome della console per un dato rom_path.
+     Questa implementazione dipende da come strutturi i dati in LibraryPage.
+     *Ipotesi*: library_data_structure è un dizionario {console: [lista_metadati_giochi]}
+     """
+     if not library_data_structure:
+         return None
+     for console, game_list in library_data_structure.items():
+         for game_data in game_list:
+             if game_data.get('rom_path') == rom_path:
+                 return console
+     logging.warning(f"Console non trovata per il rom_path: {rom_path}")
+     return None 
