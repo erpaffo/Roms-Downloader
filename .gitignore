@@ -20,3 +20,4 @@ create_deb.md
 build_deb.sh
 Dockerfile
 output_deb/
+cmd.sh

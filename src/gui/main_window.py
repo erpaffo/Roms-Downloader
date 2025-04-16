@@ -11,7 +11,7 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QFileDialog
 from src.gui.roms_page import RomsPage
 from src.config import (
-    CONSOLES, CORE_EXT, DEFAULT_CORES, EMULATOR_CONFIG_FOLDER,
+    CONSOLES, CORE_EXT, DEFAULT_CORES, DEFAULT_THEME_FILENAME, EMULATOR_CONFIG_FOLDER, STYLES_REL_PATH,
     USER_DOWNLOADS_FOLDER, resource_path, set_user_download_folder, set_max_concurrent_downloads,
     settings, DEFAULT_DOWNLOADS_FOLDER, MAX_CONCURRENT_DOWNLOADS
 )
@@ -32,36 +32,7 @@ class MainWindow(QWidget):
         self.setGeometry(100, 100, 1000, 700)
         self.setMinimumSize(800, 600)
 
-        try:
-            qss_relative_path = os.path.join("src", "gui", "styles", "style.qss")
-            qss_abs_path = resource_path(qss_relative_path)
-
-            if os.path.exists(qss_abs_path):
-                with open(qss_abs_path, "r", encoding='utf-8') as f:
-                    style_sheet = f.read()
-                    app = QApplication.instance()
-                    if app:
-                        app.setStyleSheet(style_sheet)
-                        logging.info(f"Stile QSS caricato da: {qss_abs_path}")
-                    else:
-                        logging.warning("Istanza QApplication non trovata durante l'applicazione dello stile QSS.")
-            else:
-                qss_relative_path_alt = os.path.join("src", "style.qss")
-                qss_abs_path_alt = resource_path(qss_relative_path_alt)
-                if os.path.exists(qss_abs_path_alt):
-                     with open(qss_abs_path_alt, "r", encoding='utf-8') as f:
-                         style_sheet = f.read()
-                         app = QApplication.instance()
-                         if app:
-                             app.setStyleSheet(style_sheet)
-                             logging.info(f"Stile QSS caricato da: {qss_abs_path_alt}")
-                         else:
-                             logging.warning("Istanza QApplication non trovata durante l'applicazione dello stile QSS.")
-                else:
-                     logging.warning(f"File Stile QSS non trovato nei percorsi attesi:\n- {qss_abs_path}\n- {qss_abs_path_alt}")
-
-        except Exception as e:
-            logging.error(f"Errore durante il caricamento dello stile QSS: {e}")
+        self._load_and_apply_initial_theme()
 
         self.games_list = []
         self.download_queue = []
@@ -120,6 +91,64 @@ class MainWindow(QWidget):
         if hasattr(self, 'console_combo'):
             initial_console = self.console_combo.currentText()
         self.load_games(initial_console)
+
+    def _load_and_apply_initial_theme(self):
+        """Carica il tema specificato nelle impostazioni (o il default) e lo applica."""
+        # L'oggetto 'settings' è globale da config.py
+        theme_filename = settings.value("gui/theme", DEFAULT_THEME_FILENAME)
+        theme_rel_path = os.path.join(STYLES_REL_PATH, theme_filename)
+        theme_abs_path = resource_path(theme_rel_path)
+
+        style_sheet = ""
+        loaded_theme_name = ""
+
+        # Funzione interna per leggere il file
+        def read_theme_file(path):
+            try:
+                with open(path, "r", encoding='utf-8') as f:
+                    return f.read()
+            except Exception as e:
+                logging.error(f"Errore lettura file tema {path}: {e}")
+                return ""
+
+        # Prova a caricare il tema salvato
+        if os.path.exists(theme_abs_path):
+            style_sheet = read_theme_file(theme_abs_path)
+            if style_sheet:
+                loaded_theme_name = theme_filename
+                logging.info(f"Tema iniziale caricato dalle impostazioni: {loaded_theme_name}")
+            else:
+                logging.warning(f"Errore nella lettura del tema salvato: {theme_abs_path}. Tento il fallback.")
+        else:
+            logging.warning(f"File tema salvato non trovato: {theme_abs_path}. Tento il fallback.")
+
+        # Fallback al tema di default se il caricamento del salvato fallisce o il file non esiste
+        if not style_sheet and theme_filename != DEFAULT_THEME_FILENAME:
+            default_theme_rel_path = os.path.join(STYLES_REL_PATH, DEFAULT_THEME_FILENAME)
+            default_theme_abs_path = resource_path(default_theme_rel_path)
+            if os.path.exists(default_theme_abs_path):
+                style_sheet = read_theme_file(default_theme_abs_path)
+                if style_sheet:
+                    loaded_theme_name = DEFAULT_THEME_FILENAME
+                    logging.warning(f"Applicato tema di default '{loaded_theme_name}' come fallback.")
+                else:
+                    logging.error(f"Errore nella lettura anche del tema di default: {default_theme_abs_path}")
+            else:
+                logging.error(f"File tema di default non trovato: {default_theme_abs_path}")
+
+        # Applica lo stile all'applicazione
+        app = QApplication.instance()
+        if app:
+            if style_sheet:
+                app.setStyleSheet(style_sheet)
+                logging.info(f"Stile QSS '{loaded_theme_name}' applicato.")
+            else:
+                # Se anche il default fallisce, potresti voler rimuovere stili precedenti
+                app.setStyleSheet("")
+                logging.error("Impossibile caricare qualsiasi tema. Nessuno stile applicato.")
+        else:
+            # Questo non dovrebbe succedere se chiamato da __init__ dopo la creazione di QApplication
+            logging.critical("Istanza QApplication non trovata durante l'applicazione dello stile iniziale!")
 
     def _create_menu_bar(self):
         """Creates and returns the main menu bar."""

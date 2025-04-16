@@ -1,0 +1,291 @@
+/* src/gui/styles/high_contrast_dark_theme.qss - Tema Alto Contrasto Scuro */
+
+QWidget {
+    background-color: #000000; /* Sfondo nero puro */
+    color: #ffffff; /* Testo bianco puro */
+    font-family: "Arial", sans-serif; /* Font standard ben leggibile */
+}
+
+QLabel {
+    font-size: 10pt;
+    padding: 2px;
+    background-color: transparent;
+}
+
+QLineEdit, QPlainTextEdit, QSpinBox {
+    background-color: #111111; /* Sfondo input quasi nero */
+    color: #ffffff;
+    border: 1px solid #888888; /* Bordo grigio */
+    border-radius: 0px;
+    padding: 5px;
+    font-size: 10pt;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+    border: 2px solid #32cd32; /* Bordo Verde Lime spesso */
+    background-color: #222222;
+    padding: 4px; /* Riduci padding per compensare bordo */
+}
+
+QPushButton {
+    background-color: #000000;
+    color: #32cd32; /* Testo Verde Lime */
+    border: 2px solid #32cd32; /* Bordo Verde Lime */
+    border-radius: 0px;
+    padding: 7px 14px;
+    font-size: 10pt;
+    font-weight: bold;
+    min-width: 80px;
+}
+
+QPushButton:hover {
+    background-color: #32cd32; /* Sfondo Verde Lime */
+    color: #000000; /* Testo nero */
+}
+
+QPushButton:pressed {
+    background-color: #228b22; /* Verde foresta */
+    color: #ffffff;
+    border-color: #228b22;
+}
+
+QPushButton:disabled {
+    background-color: #333333;
+    color: #888888;
+    border-color: #555555;
+}
+
+QComboBox {
+    background-color: #111111;
+    border: 1px solid #888888;
+    border-radius: 0px;
+    padding: 5px;
+    min-height: 25px;
+    color: #ffffff;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left-width: 1px;
+    border-left-color: #888888;
+    border-left-style: solid;
+    background-color: #222222;
+}
+
+QComboBox::down-arrow {
+    image: url(:/qt-project.org/styles/commonstyle/images/standardbutton-down-16.png); /* Necessita versione chiara */
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #888888;
+    background-color: #111111;
+    selection-background-color: #32cd32; /* Verde Lime selezione */
+    selection-color: #000000; /* Testo nero */
+    color: #ffffff;
+}
+
+QTableWidget {
+    border: 1px solid #888888;
+    gridline-color: #444444;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+QTableWidget::item {
+    padding: 5px;
+    border: none;
+     border-bottom: 1px solid #333333;
+}
+
+QTableWidget::item:selected {
+    background-color: #32cd32;
+    color: #000000;
+}
+
+QHeaderView::section {
+    background-color: #222222;
+    padding: 4px;
+    border: 1px solid #888888;
+    border-bottom-width: 2px; /* Bordo sotto più spesso */
+    font-weight: bold;
+    font-size: 10pt;
+    color: #ffffff;
+}
+
+QProgressBar {
+    border: 1px solid #888888;
+    border-radius: 0px;
+    text-align: center;
+    background-color: #111111;
+    height: 20px;
+    color: #ffffff;
+}
+
+QProgressBar::chunk {
+    background-color: #32cd32; /* Verde Lime */
+    border-radius: 0px;
+    margin: 1px;
+}
+
+QListWidget {
+    background-color: #111111;
+    border: 1px solid #888888;
+    border-radius: 0px;
+    color: #ffffff;
+}
+
+QListWidget::item {
+    padding: 5px;
+}
+
+QListWidget::item:selected {
+    background-color: #32cd32;
+    color: #000000;
+}
+
+QMenuBar {
+    background-color: #111111;
+    color: #ffffff;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 4px 8px;
+}
+
+QMenuBar::item:selected {
+    background: #32cd32; /* Verde */
+    color: #000000;
+}
+
+QMenu {
+    background-color: #111111;
+    border: 1px solid #888888;
+    color: #ffffff;
+}
+
+QMenu::item {
+    padding: 5px 25px 5px 25px;
+}
+
+QMenu::item:selected {
+    background-color: #32cd32;
+    color: #000000;
+}
+
+QTabWidget::pane {
+    border: 1px solid #888888;
+    margin-top: 0px;
+}
+
+QTabBar::tab {
+    background: #222222;
+    border: 1px solid #888888;
+    border-bottom: none;
+    border-radius: 0px;
+    padding: 6px 12px;
+    margin-right: 0px;
+    color: #aaaaaa; /* Grigio per non selezionate */
+}
+
+QTabBar::tab:selected {
+    background: #000000; /* Nero come sfondo */
+    border: 1px solid #32cd32; /* Bordo verde */
+    border-bottom: none;
+    color: #32cd32; /* Testo verde */
+}
+
+QTabBar::tab:!selected:hover {
+    background: #444444;
+    color: #ffffff;
+}
+
+/* Stili Specifici Alto Contrasto */
+QTreeWidget#LibraryTree {
+    border: 1px solid #888888;
+    alternate-background-color: #1a1a1a;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+QTreeWidget#LibraryTree::item {
+    padding: 6px 4px;
+}
+
+QTreeWidget#LibraryTree::item:selected {
+    background-color: #32cd32; /* Verde Lime */
+    color: #000000;
+}
+
+QTreeWidget#LibraryTree::item:hover:!selected {
+    background-color: #333333;
+}
+
+QTreeWidget#LibraryTree QHeaderView::section {
+    background-color: #222222;
+    padding: 6px;
+    border: 1px solid #888888;
+    border-bottom-width: 2px;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #ffffff;
+}
+
+/* Icone Branch */
+QTreeWidget::branch:has-children:!has-siblings:closed,
+QTreeWidget::branch:closed:has-children:has-siblings {
+    border-image: none;
+    image: url(:/qt-project.org/styles/commonstyle/images/branch-closed-16.png);
+}
+
+QTreeWidget::branch:open:has-children:!has-siblings,
+QTreeWidget::branch:open:has-children:has-siblings {
+    border-image: none;
+    image: url(:/qt-project.org/styles/commonstyle/images/branch-open-16.png);
+}
+
+QPushButton#RefreshButton {
+    /* Eredita stile globale */
+}
+
+/* Stili Controlli Alto Contrasto */
+QGroupBox#ControlsGroup {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 10px;
+    color: #ffffff;
+    border: 1px solid #888888;
+    border-radius: 0px;
+    padding-top: 15px;
+}
+
+QGroupBox#ControlsGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px 0 5px;
+    left: 10px;
+    color: #32cd32; /* Titolo Verde Lime */
+}
+
+QScrollArea#ControlsScrollArea {
+    border: 1px solid #888888;
+    background-color: #000000;
+}
+
+HotkeyInput[recording="true"] {
+    background-color: #222222;
+    border: 2px solid #32cd32; /* Verde Lime */
+    color: #ffffff;
+    font-weight: bold;
+}
+
+QGridLayout QLabel {
+    padding-right: 5px;
+    background-color: transparent;
+}
+
+QPushButton#SaveControlsButton {
+     min-width: 120px;
+}

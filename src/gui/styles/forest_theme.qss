@@ -1,0 +1,282 @@
+/* src/gui/styles/forest_theme.qss - Tema Foresta */
+
+QWidget {
+    background-color: #f5f5dc; /* Beige chiaro (carta pergamena) */
+    color: #3d2b1f; /* Marrone scuro per testo */
+    font-family: "Georgia", serif; /* Font più classico */
+}
+
+QLabel {
+    font-size: 10pt;
+    padding: 2px;
+    background-color: transparent;
+}
+
+QLineEdit, QPlainTextEdit, QSpinBox {
+    background-color: #ffffff;
+    color: #3d2b1f;
+    border: 1px solid #8fbc8f; /* Verde mare medio scuro per bordi */
+    border-radius: 2px; /* Angoli meno arrotondati */
+    padding: 5px;
+    font-size: 10pt;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+    border: 1px solid #556b2f; /* Verde oliva scuro */
+    background-color: #f0fff0; /* Verde Menta molto chiaro */
+}
+
+QPushButton {
+    background-color: #556b2f; /* Verde oliva scuro */
+    color: #ffffff; /* Testo bianco */
+    border: 1px solid #3d4c21; /* Bordo verde ancora più scuro */
+    border-radius: 2px;
+    padding: 7px 14px; /* Leggermente meno padding */
+    font-size: 10pt;
+    font-weight: normal; /* Normale invece di grassetto */
+    min-width: 80px;
+}
+
+QPushButton:hover {
+    background-color: #6b8e23; /* Verde oliva medio */
+}
+
+QPushButton:pressed {
+    background-color: #3d4c21; /* Verde oliva scurissimo */
+}
+
+QPushButton:disabled {
+    background-color: #cccccc;
+    color: #888888;
+    border-color: #bbbbbb;
+}
+
+QComboBox {
+    background-color: white;
+    border: 1px solid #8fbc8f;
+    border-radius: 2px;
+    padding: 5px;
+    min-height: 25px;
+    color: #3d2b1f;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left-width: 1px;
+    border-left-color: #8fbc8f;
+    border-left-style: solid;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+    background-color: #cee3ce; /* Verde chiaro per freccia */
+}
+
+QComboBox::down-arrow {
+    image: url(:/qt-project.org/styles/commonstyle/images/standardbutton-down-16.png);
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #8fbc8f;
+    background-color: white;
+    selection-background-color: #556b2f; /* Verde oliva scuro selezione */
+    selection-color: white;
+    color: #3d2b1f;
+}
+
+QTableWidget {
+    border: 1px solid #8fbc8f;
+    gridline-color: #cee3ce; /* Linee griglia verdi chiare */
+    background-color: white;
+    color: #3d2b1f;
+}
+
+QTableWidget::item {
+    padding: 5px;
+     border-bottom: 1px solid #e0f0e0;
+}
+
+QTableWidget::item:selected {
+    background-color: #556b2f;
+    color: white;
+}
+
+QHeaderView::section {
+    background-color: #cee3ce; /* Verde chiaro intestazioni */
+    padding: 4px;
+    border: 1px solid #8fbc8f;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #3d2b1f;
+}
+
+QProgressBar {
+    border: 1px solid #8fbc8f;
+    border-radius: 2px;
+    text-align: center;
+    background-color: #ffffff;
+    height: 20px;
+    color: #3d2b1f;
+}
+
+QProgressBar::chunk {
+    background-color: #6b8e23; /* Verde oliva medio */
+    border-radius: 2px;
+    margin: 0.5px;
+}
+
+QListWidget {
+    background-color: white;
+    border: 1px solid #8fbc8f;
+    border-radius: 2px;
+    color: #3d2b1f;
+}
+
+QListWidget::item {
+    padding: 5px;
+}
+
+QListWidget::item:selected {
+    background-color: #556b2f;
+    color: white;
+}
+
+QMenuBar {
+    background-color: #cee3ce; /* Verde chiaro */
+    color: #3d2b1f;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 4px 8px;
+}
+
+QMenuBar::item:selected {
+    background: #a8d1a8; /* Verde più scuro su selezione */
+}
+
+QMenu {
+    background-color: white;
+    border: 1px solid #8fbc8f;
+    color: #3d2b1f;
+}
+
+QMenu::item {
+    padding: 5px 25px 5px 25px;
+}
+
+QMenu::item:selected {
+    background-color: #556b2f;
+    color: white;
+}
+
+QTabWidget::pane {
+    border-top: 1px solid #8fbc8f;
+    margin-top: -1px;
+}
+
+QTabBar::tab {
+    background: #cee3ce; /* Verde chiaro */
+    border: 1px solid #8fbc8f;
+    border-bottom-color: #f5f5dc; /* Fondo finestra */
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    padding: 6px 12px;
+    margin-right: 2px;
+    color: #3d2b1f;
+}
+
+QTabBar::tab:selected {
+    background: #f5f5dc;
+    border-bottom-color: #f5f5dc;
+    margin-bottom: -1px;
+}
+
+QTabBar::tab:!selected:hover {
+    background: #b4d8b4; /* Verde più scuro su hover */
+}
+
+/* Stili Specifici Forest */
+QTreeWidget#LibraryTree {
+    border: 1px solid #8fbc8f;
+    alternate-background-color: #f0fff0; /* Verde menta chiaro alternato */
+    background-color: white;
+    color: #3d2b1f;
+}
+
+QTreeWidget#LibraryTree::item {
+    padding: 6px 4px;
+}
+
+QTreeWidget#LibraryTree::item:selected {
+    background-color: #8fbc8f; /* Verde mare selezione */
+    color: #3d2b1f; /* Testo scuro */
+}
+
+QTreeWidget#LibraryTree::item:hover:!selected {
+    background-color: #cee3ce; /* Hover verde chiaro */
+}
+
+QTreeWidget#LibraryTree QHeaderView::section {
+    background-color: #cee3ce;
+    padding: 6px;
+    border: 1px solid #8fbc8f;
+    border-bottom: 2px solid #8fbc8f;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #3d2b1f;
+}
+
+/* Icone Branch */
+QTreeWidget::branch:has-children:!has-siblings:closed,
+QTreeWidget::branch:closed:has-children:has-siblings {
+    border-image: none;
+    image: url(:/qt-project.org/styles/commonstyle/images/branch-closed-16.png);
+}
+
+QTreeWidget::branch:open:has-children:!has-siblings,
+QTreeWidget::branch:open:has-children:has-siblings {
+    border-image: none;
+    image: url(:/qt-project.org/styles/commonstyle/images/branch-open-16.png);
+}
+
+QPushButton#RefreshButton {
+    /* Eredita stile globale */
+}
+
+/* Stili Controlli Forest */
+QGroupBox#ControlsGroup {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 10px;
+    color: #3d2b1f;
+}
+
+QGroupBox#ControlsGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px 0 5px;
+    left: 10px;
+    color: #3d2b1f;
+}
+
+QScrollArea#ControlsScrollArea {
+    border: 1px solid #8fbc8f;
+    background-color: white;
+}
+
+HotkeyInput[recording="true"] {
+    background-color: #f0fff0; /* Verde Menta */
+    border: 1px solid #556b2f; /* Verde oliva scuro */
+    color: #3d2b1f;
+    font-weight: bold;
+}
+
+QGridLayout QLabel {
+    padding-right: 5px;
+    background-color: transparent;
+}
+
+QPushButton#SaveControlsButton {
+     min-width: 120px;
+}

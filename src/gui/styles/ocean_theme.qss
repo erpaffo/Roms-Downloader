@@ -1,0 +1,242 @@
+/* ocean_theme.qss - Tema in tonalità blu oceano */
+
+QWidget {
+    background-color: #EBF5FB; /* Sfondo azzurro molto chiaro */
+    color: #1A5276; /* Blu scuro per il testo */
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+QLabel {
+    font-size: 10pt;
+    padding: 2px;
+    color: #154360; /* Blu più scuro per le etichette */
+}
+
+QLineEdit, QPlainTextEdit, QSpinBox {
+    background-color: #ffffff;
+    border: 1px solid #85C1E9; /* Bordo azzurro chiaro */
+    border-radius: 3px;
+    padding: 5px;
+    font-size: 10pt;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+    border: 1px solid #3498DB; /* Azzurro più vivace quando selezionato */
+}
+
+QPushButton {
+    background-color: #2E86C1; /* Blu medio */
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 8px 15px;
+    font-size: 10pt;
+    font-weight: bold;
+    min-width: 80px;
+}
+
+QPushButton:hover {
+    background-color: #21618C; /* Blu più scuro al passaggio del mouse */
+}
+
+QPushButton:pressed {
+    background-color: #1B4F72; /* Blu ancora più scuro quando premuto */
+}
+
+QPushButton:disabled {
+    background-color: #AED6F1; /* Azzurro chiaro disabilitato */
+    color: #7FB3D5;
+}
+
+QComboBox {
+    background-color: white;
+    border: 1px solid #85C1E9;
+    border-radius: 3px;
+    padding: 5px;
+    min-height: 25px;
+    color: #154360;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left-width: 1px;
+    border-left-color: #85C1E9;
+    border-left-style: solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: #D4E6F1;
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #85C1E9;
+    background-color: white;
+    selection-background-color: #3498DB;
+    selection-color: white;
+}
+
+QTableWidget {
+    border: 1px solid #85C1E9;
+    gridline-color: #D4E6F1;
+    background-color: white;
+}
+
+QTableWidget::item {
+    padding: 5px;
+}
+
+QTableWidget::item:selected {
+    background-color: #3498DB;
+    color: white;
+}
+
+QHeaderView::section {
+    background-color: #D4E6F1;
+    padding: 4px;
+    border: 1px solid #85C1E9;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+QProgressBar {
+    border: 1px solid #85C1E9;
+    border-radius: 3px;
+    text-align: center;
+    background-color: #ffffff;
+    height: 20px;
+}
+
+QProgressBar::chunk {
+    background-color: #3498DB;
+    border-radius: 3px;
+    margin: 0.5px;
+}
+
+QListWidget {
+    background-color: white;
+    border: 1px solid #85C1E9;
+    border-radius: 3px;
+}
+
+QListWidget::item {
+    padding: 5px;
+}
+
+QListWidget::item:selected {
+    background-color: #3498DB;
+    color: white;
+}
+
+QMenuBar {
+    background-color: #D4E6F1;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 4px 8px;
+}
+
+QMenuBar::item:selected {
+    background: #AED6F1;
+}
+
+QMenu {
+    background-color: white;
+    border: 1px solid #85C1E9;
+}
+
+QMenu::item {
+    padding: 5px 25px 5px 25px;
+}
+
+QMenu::item:selected {
+    background-color: #3498DB;
+    color: white;
+}
+
+QTabWidget::pane {
+    border-top: 1px solid #85C1E9;
+    margin-top: -1px;
+}
+
+QTabBar::tab {
+    background: #D4E6F1;
+    border: 1px solid #85C1E9;
+    border-bottom-color: #EBF5FB;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 6px 12px;
+    margin-right: 2px;
+}
+
+QTabBar::tab:selected {
+    background: #EBF5FB;
+    border-bottom-color: #EBF5FB;
+    margin-bottom: -1px;
+}
+
+QTabBar::tab:!selected:hover {
+    background: #AED6F1;
+}
+
+QTreeWidget#LibraryTree {
+    border: 1px solid #85C1E9;
+    alternate-background-color: #EBF5FB;
+    background-color: white;
+}
+
+QTreeWidget#LibraryTree::item {
+    padding: 6px 4px;
+}
+
+QTreeWidget#LibraryTree::item:selected {
+    background-color: #AED6F1;
+    color: #154360;
+}
+
+QTreeWidget#LibraryTree::item:hover:!selected {
+     background-color: #D6EAF8;
+}
+
+QTreeWidget#LibraryTree QHeaderView::section {
+    background-color: #D4E6F1;
+    padding: 6px;
+    border: 1px solid #85C1E9;
+    border-bottom: 2px solid #3498DB;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+QGroupBox#ControlsGroup {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 10px;
+    color: #154360;
+}
+
+QGroupBox#ControlsGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px 0 5px;
+    left: 10px;
+}
+
+QScrollArea#ControlsScrollArea {
+    border: 1px solid #85C1E9;
+    background-color: white;
+}
+
+HotkeyInput[recording="true"] {
+    background-color: #D6EAF8;
+    border: 1px solid #3498DB;
+    font-weight: bold;
+}
+
+QGridLayout QLabel {
+    padding-right: 5px;
+}
+
+QPushButton#SaveControlsButton {
+    min-width: 120px;
+}

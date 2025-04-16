@@ -1,0 +1,315 @@
+/* src/gui/styles/gaming_theme.qss - Tema con stile gaming */
+
+QWidget {
+    background-color: #1A1A2E;
+    color: #E2E2E2;
+    font-family: "Rajdhani", "Segoe UI", Arial, sans-serif;
+}
+
+QLabel {
+    font-size: 10pt;
+    padding: 2px;
+    color: #E2E2E2;
+}
+
+QLineEdit, QPlainTextEdit, QSpinBox {
+    background-color: #16213E;
+    border: 1px solid #7A0BC0;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 10pt;
+    color: #E2E2E2;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+    border: 1px solid #FA58B6;
+    background-color: #212747;
+}
+
+QPushButton {
+    background-color: #7A0BC0;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 10pt;
+    font-weight: bold;
+    min-width: 80px;
+}
+
+QPushButton:hover {
+    background-color: #9B39D5;
+    border: 1px solid #FA58B6;
+}
+
+QPushButton:pressed {
+    background-color: #6509A0;
+}
+
+QPushButton:disabled {
+    background-color: #444444;
+    color: #888888;
+}
+
+QComboBox {
+    background-color: #16213E;
+    border: 1px solid #7A0BC0;
+    border-radius: 6px;
+    padding: 8px;
+    min-height: 25px;
+    color: #E2E2E2;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 25px;
+    border-left-width: 1px;
+    border-left-color: #7A0BC0;
+    border-left-style: solid;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: #2A2B59;
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #7A0BC0;
+    background-color: #16213E;
+    selection-background-color: #7A0BC0;
+    selection-color: white;
+}
+
+QTableWidget {
+    border: 1px solid #7A0BC0;
+    gridline-color: #2A2B59;
+    background-color: #16213E;
+    alternate-background-color: #1C2246;
+}
+
+QTableWidget::item {
+    padding: 8px;
+    color: #E2E2E2;
+}
+
+QTableWidget::item:selected {
+    background-color: #7A0BC0;
+    color: white;
+}
+
+QHeaderView::section {
+    background-color: #2A2B59;
+    padding: 8px;
+    border: 1px solid #7A0BC0;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #E2E2E2;
+}
+
+QProgressBar {
+    border: 1px solid #7A0BC0;
+    border-radius: 6px;
+    text-align: center;
+    background-color: #16213E;
+    height: 20px;
+    color: white;
+}
+
+QProgressBar::chunk {
+    background-color: #FA58B6;
+    border-radius: 6px;
+    margin: 0;
+}
+
+QListWidget {
+    background-color: #16213E;
+    border: 1px solid #7A0BC0;
+    border-radius: 6px;
+    color: #E2E2E2;
+}
+
+QListWidget::item {
+    padding: 8px;
+}
+
+QListWidget::item:selected {
+    background-color: #7A0BC0;
+    color: white;
+}
+
+QMenuBar {
+    background-color: #0F142B;
+    color: #E2E2E2;
+    border-bottom: 1px solid #7A0BC0;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 8px 12px;
+}
+
+QMenuBar::item:selected {
+    background: #2A2B59;
+}
+
+QMenu {
+    background-color: #16213E;
+    border: 1px solid #7A0BC0;
+    color: #E2E2E2;
+}
+
+QMenu::item {
+    padding: 8px 25px 8px 25px;
+}
+
+QMenu::item:selected {
+    background-color: #7A0BC0;
+    color: white;
+}
+
+QTabWidget::pane {
+    border-top: 1px solid #7A0BC0;
+    margin-top: -1px;
+}
+
+QTabBar::tab {
+    background: #16213E;
+    border: 1px solid #7A0BC0;
+    border-bottom-color: #1A1A2E;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 8px 16px;
+    margin-right: 2px;
+    color: #E2E2E2;
+}
+
+QTabBar::tab:selected {
+    background: #1A1A2E;
+    border-bottom-color: #1A1A2E;
+    margin-bottom: -1px;
+}
+
+QTabBar::tab:!selected:hover {
+    background: #2A2B59;
+}
+
+/* Stili per la Pagina Libreria */
+QTreeWidget#LibraryTree {
+    border: 1px solid #7A0BC0;
+    alternate-background-color: #1C2246;
+    background-color: #16213E;
+}
+
+QTreeWidget#LibraryTree::item {
+    padding: 8px 4px;
+    color: #E2E2E2;
+}
+
+QTreeWidget#LibraryTree::item:selected {
+    background-color: #7A0BC0;
+    color: white;
+}
+
+QTreeWidget#LibraryTree::item:hover:!selected {
+    background-color: #2A2B59;
+}
+
+QTreeWidget#LibraryTree QHeaderView::section {
+    background-color: #2A2B59;
+    padding: 8px;
+    border: 1px solid #7A0BC0;
+    border-bottom: 2px solid #7A0BC0;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #E2E2E2;
+}
+
+/* Stile per i controlli */
+QGroupBox#ControlsGroup {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 10px;
+    color: #E2E2E2;
+    border: 1px solid #7A0BC0;
+    border-radius: 6px;
+    padding-top: 20px;
+}
+
+QGroupBox#ControlsGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    left: 10px;
+    color: #FA58B6;
+}
+
+QScrollArea#ControlsScrollArea {
+    border: 1px solid #7A0BC0;
+    background-color: #16213E;
+}
+
+HotkeyInput[recording="true"] {
+    background-color: #FA58B6;
+    border: 1px solid #7A0BC0;
+    color: white;
+    font-weight: bold;
+}
+
+#NavList {
+    background-color: #0F142B;
+    border-right: 1px solid #7A0BC0;
+    color: #E2E2E2;
+}
+
+#NavList::item {
+    padding: 14px 8px;
+    border-bottom: 1px solid #2A2B59;
+}
+
+#NavList::item:selected {
+    background-color: #7A0BC0;
+    color: white;
+}
+
+#NavList::item:hover:!selected {
+    background-color: #2A2B59;
+}
+
+QScrollBar:vertical {
+    background-color: #16213E;
+    width: 12px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #7A0BC0;
+    min-height: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #9B39D5;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background-color: #16213E;
+    height: 12px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #7A0BC0;
+    min-width: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #9B39D5;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}

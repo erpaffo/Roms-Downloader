@@ -58,6 +58,10 @@ SETTINGS_APP = APP_NAME
 QSettings.setDefaultFormat(QSettings.Format.IniFormat)
 settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
 
+STYLES_REL_PATH = os.path.join("src", "gui", "styles")
+DEFAULT_THEME_FILENAME = "default_light_theme.qss" # O il nome del tuo tema predefinito
+
+
 DEFAULT_DOWNLOADS_FOLDER = os.path.join(DATA_DIR, "downloads")
 USER_DOWNLOADS_FOLDER = settings.value("download_folder", DEFAULT_DOWNLOADS_FOLDER)
 if not os.path.exists(USER_DOWNLOADS_FOLDER):
@@ -180,16 +184,12 @@ CONSOLES = {
 
 if sys.platform.startswith("win"):
     CORE_EXT = ".dll"
-    NIGHTLY_URL = "https://buildbot.libretro.com/nightly/windows/x86_64/latest/"
 elif sys.platform.startswith("linux"):
     CORE_EXT = ".so"
-    NIGHTLY_URL = "https://buildbot.libretro.com/nightly/linux/x86_64/latest/"
 elif sys.platform.startswith("darwin"):
     CORE_EXT = ".dylib"
-    NIGHTLY_URL = "https://buildbot.libretro.com/nightly/apple/osx/x86_64/latest/"
 else:
     CORE_EXT = ".so"
-    NIGHTLY_URL = ""
 
 DEFAULT_CORES = {
     "Atari 2600": "stella2023_libretro",
