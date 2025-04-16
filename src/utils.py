@@ -3,19 +3,13 @@ import re
 import zipfile
 import os
 import sys
-import subprocess
-import platform
-import requests
-from pyunpack import Archive
 import shutil
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox
 from src.config import RETROARCH_EXTRACT_FOLDER, SYSTEM_FOLDER, get_save_directory
 from src.console_keybindings import CONSOLE_KEYBINDINGS
 from src.conversion import convert_binding
 from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.config import CORE_SETTINGS_DEFAULTS
-from urllib.parse import unquote # <--- Aggiungi import
+from urllib.parse import unquote
 
 
 ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
@@ -47,39 +41,6 @@ def extract_zip(zip_path, extract_to):
         print(f"Errore nell'estrazione: {e}")
         return False
 
-def find_emulator_path(emulator_name):
-    """
-    Cerca il percorso eseguibile dell'emulatore dato il suo nome.
-    Utilizza shutil.which per individuare l'eseguibile nel PATH di sistema.
-    Se non viene trovato, viene sollevata un'eccezione.
-    """
-    path = shutil.which(emulator_name)
-    if path:
-        return path
-    else:
-        raise FileNotFoundError(f"Emulatore '{emulator_name}' non trovato nel PATH di sistema. "
-                                "Assicurati di averlo installato e che sia accessibile.")
-
-def format_rate(rate):
-    """
-    Converte una velocità (in byte/sec) in una stringa formattata.
-    Se la velocità è inferiore a 1 MB/s, usa KB/s, altrimenti MB/s.
-    """
-    if rate < 1024*1024:
-        return f"{rate/1024:.1f} KB/s"
-    else:
-        return f"{rate/(1024*1024):.1f} MB/s"
-
-def format_space(bytes_value):
-    """
-    Converte uno spazio (in byte) in una stringa formattata.
-    Se lo spazio è inferiore a 1 MB, usa KB, altrimenti MB.
-    """
-    if bytes_value < 1024*1024:
-        return f"{bytes_value/1024:.1f} KB"
-    else:
-        return f"{bytes_value/(1024*1024):.1f} MB"
-
 def find_retroarch():
     """
     Finds the RetroArch executable.
@@ -93,13 +54,13 @@ def find_retroarch():
         logging.info(f"RetroArch found in PATH: {path_in_syspath}")
         return path_in_syspath
     logging.info(RETROARCH_EXTRACT_FOLDER)
-    if RETROARCH_EXTRACT_FOLDER: # Assicurati che la variabile sia stata importata
+    if RETROARCH_EXTRACT_FOLDER: 
         exe_name = "retroarch.exe" if sys.platform.startswith("win") else "retroarch"
         path_in_appdata = os.path.join(RETROARCH_EXTRACT_FOLDER, exe_name)
         logging.info(f"Checking for RetroArch in configured app data path: {path_in_appdata}")
         if os.path.exists(path_in_appdata):
             logging.info(f"RetroArch found in configured app data path: {path_in_appdata}")
-            return os.path.abspath(path_in_appdata) # Restituisci percorso assoluto
+            return os.path.abspath(path_in_appdata)
     else:
          logging.warning("RETROARCH_EXTRACT_FOLDER non definito o non importato, salto controllo")
 
@@ -120,9 +81,6 @@ def find_retroarch():
 
     logging.error("RetroArch executable not found in PATH, app data, or common locations.")
     return None
-
-def is_retroarch_installed():
-    return find_retroarch() is not None
 
 def update_emulator_config(config_path, new_bindings):
     """
@@ -149,11 +107,7 @@ def update_emulator_config(config_path, new_bindings):
 
     with open(config_path, "w") as f:
         f.writelines(lines)
-
-def convert_key(key):
-    di = {"+":"add",
-          "-": "subtract"}
-    
+ 
 def create_default_core_config(core_config_path: str, console_name: str, core_base_name: str):
     """
     Creates a default core-specific config file if it doesn't exist.
@@ -246,8 +200,7 @@ def clean_rom_title(filename):
     loops = 0
     while previous_cleaned != cleaned and loops < 10: 
         previous_cleaned = cleaned
-        for i, pattern in enumerate(patterns_to_remove):
-            before_sub = cleaned
+        for _, pattern in enumerate(patterns_to_remove):
             cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE).strip()
         cleaned = ' '.join(cleaned.split()).strip()
         cleaned = re.sub(r'^[_\-\s]+|[_\-\s]+$', '', cleaned).strip()
@@ -257,17 +210,3 @@ def clean_rom_title(filename):
 
     return cleaned if cleaned else name_without_ext
 
-def find_console_for_rom(library_data_structure, rom_path):
-     """
-     Trova il nome della console per un dato rom_path.
-     Questa implementazione dipende da come strutturi i dati in LibraryPage.
-     *Ipotesi*: library_data_structure è un dizionario {console: [lista_metadati_giochi]}
-     """
-     if not library_data_structure:
-         return None
-     for console, game_list in library_data_structure.items():
-         for game_data in game_list:
-             if game_data.get('rom_path') == rom_path:
-                 return console
-     logging.warning(f"Console non trovata per il rom_path: {rom_path}")
-     return None 

@@ -2,23 +2,22 @@ import os
 import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLineEdit, QHeaderView,
-    QTableWidget, QTableWidgetItem, QPushButton, QLabel, QTreeWidgetItem,
-    QPlainTextEdit, QTreeWidget, QListWidget, QListWidgetItem, QProgressBar, QSizePolicy, QSplitter,
-    QStackedWidget, QMessageBox, QSpinBox, QInputDialog, QSystemTrayIcon, QMenuBar, QMenu, QApplication
+    QTableWidget, QTableWidgetItem, QPushButton, QLabel,
+    QPlainTextEdit, QListWidget, QListWidgetItem, QProgressBar, QSizePolicy, QSplitter,
+    QStackedWidget, QMessageBox, QInputDialog, QMenuBar, QMenu, QApplication
 )
-from PySide6.QtCore import Qt, QThread, QSize, QEvent
-from PySide6.QtGui import QIcon, QAction, QCloseEvent
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtCore import Qt, QThread
+from PySide6.QtGui import QAction
 from src.gui.roms_page import RomsPage
 from src.config import (
-    CONSOLES, CORE_EXT, DEFAULT_CORES, DEFAULT_THEME_FILENAME, EMULATOR_CONFIG_FOLDER, STYLES_REL_PATH,
+    CONSOLES, DEFAULT_THEME_FILENAME, EMULATOR_CONFIG_FOLDER, STYLES_REL_PATH,
     USER_DOWNLOADS_FOLDER, resource_path, set_user_download_folder, set_max_concurrent_downloads,
-    settings, DEFAULT_DOWNLOADS_FOLDER, MAX_CONCURRENT_DOWNLOADS
+    settings, MAX_CONCURRENT_DOWNLOADS
 )
 from src.workers.scrape_worker import ScrapeWorker
 from src.workers.download_manager import DownloadManager
 from src.gui.download_queue_item import DownloadQueueItemWidget
-from src.utils import extract_nations, ALLOWED_NATIONS, update_emulator_config, convert_binding
+from src.utils import extract_nations, ALLOWED_NATIONS
 from src.gui.settings_dialog import SettingsDialog
 from src.gui.library_page import LibraryPage
 from src.gui.weight_item import WeightItem
@@ -302,15 +301,6 @@ class MainWindow(QWidget):
         self.log_area.setReadOnly(True)
         layout.addWidget(self.log_area)
         return layout
-
-    def select_download_folder(self):
-        """Opens a dialog to select the download folder."""
-        folder = QFileDialog.getExistingDirectory(self, "Seleziona cartella download", USER_DOWNLOADS_FOLDER)
-        if folder:
-            set_user_download_folder(folder)
-            self.log(f"Cartella download impostata su: {folder}")
-            if hasattr(self, 'library_page'):
-                self.library_page.load_library()
 
     def log(self, message):
         """Logs a message to the info level and appends to the log area."""
@@ -680,32 +670,6 @@ class MainWindow(QWidget):
             self.log(f"Impostazioni generali aggiornate: Cartella='{USER_DOWNLOADS_FOLDER}', Max DL={MAX_CONCURRENT_DOWNLOADS}")
             if hasattr(self, 'library_page'):
                 self.library_page.load_library()
-
-    def closeEvent(self, event: QCloseEvent):
-        logging.info("Evento di chiusura MainWindow ricevuto.")
-
-        if self.download_manager_thread and self.download_manager_thread.isRunning():
-            reply = QMessageBox.question(self, "Download in Corso",
-                                        "Ci sono download attivi. Sei sicuro di voler uscire?\n"
-                                        "I download in corso verranno interrotti.",
-                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-                                        QMessageBox.StandardButton.Cancel)
-            if reply == QMessageBox.StandardButton.Cancel:
-                logging.info("Chiusura annullata dall'utente a causa di download attivi.")
-                event.ignore()
-                return
-            else:
-                logging.warning("Uscita confermata con download attivi. Interruzione download...")
-                self.cancel_downloads(silent=True)
-
-        logging.debug("Chiamata a QApplication.closeAllWindows()...")
-        closed_all = QApplication.closeAllWindows()
-
-        if not closed_all:
-            logging.warning("closeAllWindows() ha restituito False, ma si procede con la chiusura della MainWindow.")
-
-        logging.debug("Accettazione evento di chiusura per MainWindow.")
-        event.accept()
 
     def cancel_downloads(self, silent=False):
         worker_existed = False

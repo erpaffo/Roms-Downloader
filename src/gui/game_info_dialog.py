@@ -201,15 +201,12 @@ class GameInfoDialog(QDialog):
 
         if reply == QMessageBox.StandardButton.Yes:
             logging.info(f"Inizio eliminazione per gioco: {title} (ROM: {rom_path})")
-            rom_deleted = False
             try:
                 if os.path.exists(rom_path):
                     os.remove(rom_path)
                     logging.info(f"  - File ROM eliminato: {rom_path}")
-                    rom_deleted = True
                 else:
                     logging.warning(f"  - File ROM non trovato o già eliminato: {rom_path}")
-                    rom_deleted = True
             except Exception as e:
                 logging.error(f"  - Errore eliminazione ROM {rom_path}: {e}")
                 QMessageBox.warning(self, "Errore Eliminazione ROM", f"Impossibile eliminare il file ROM:\n{e}")

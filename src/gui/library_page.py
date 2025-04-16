@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QPixmap
 
 from src.utils import create_default_core_config, find_retroarch, clean_rom_title
-from src.config import (settings, DEFAULT_DOWNLOADS_FOLDER, USER_DOWNLOADS_FOLDER,
+from src.config import (USER_CONFIG_DIR, settings, DEFAULT_DOWNLOADS_FOLDER, USER_DOWNLOADS_FOLDER,
                         CORES_FOLDER, DEFAULT_CORES, CORE_EXT,
                         EMULATOR_CONFIG_FOLDER)
 from src.scraping import fetch_game_details
@@ -92,7 +92,7 @@ class LibraryPage(QWidget):
 
             logging.debug(f"Scansione cartella: {current_folder}")
 
-            for root, dirs, files in os.walk(current_folder):
+            for root, _, files in os.walk(current_folder):
                 relative_path_to_root = os.path.relpath(root, current_folder)
                 console_name = relative_path_to_root.split(os.sep)[0] if relative_path_to_root != '.' else "Generale"
 
@@ -271,21 +271,17 @@ class LibraryPage(QWidget):
         else:
             logging.warning(f"Avvio senza config specifico per {console_name}.")
 
-        command_list.extend(["-L", core_path, rom_path, "-v"])
+        command_list.extend(["-L", core_path, rom_path])
+
+        log_file_path = os.path.abspath(os.path.join(USER_CONFIG_DIR, "retroarch_launch.log"))
+        logging.info(f"Log di RetroArch verrà scritto in: {log_file_path}")
+        command_list.extend(["--verbose", "--log-file", log_file_path])
 
         try:
             logging.info(f"Esecuzione comando: {' '.join(command_list)}")
-            process = subprocess.Popen(command_list,
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       text=True, encoding='utf-8', errors='replace')
-            try:
-                stdout, stderr = process.communicate(timeout=1)
-                if stdout: logging.debug(f"RA stdout(1s): {stdout[:200]}...")
-                if stderr: logging.warning(f"RA stderr(1s): {stderr[:200]}...")
-            except subprocess.TimeoutExpired:
-                 logging.info(f"RetroArch avviato (PID: {process.pid}), continua in background.")
-            except Exception as comm_err:
-                 logging.error(f"Errore comunicazione con processo RA: {comm_err}")
+            process = subprocess.Popen(command_list,text=True, encoding='utf-8', errors='replace')
+         
+            logging.info(f"RetroArch avviato (PID: {process.pid}). Controlla il log: {log_file_path}")
 
         except OSError as e:
             logging.error(f"OSError Avvio RA: {e} (Comando: {' '.join(command_list)})")
@@ -293,6 +289,7 @@ class LibraryPage(QWidget):
         except Exception as e:
             logging.exception(f"Errore imprevisto Avvio RA:")
             QMessageBox.critical(self, "Errore Imprevisto", f"Errore avvio RetroArch:\n{e}")
+
 
     def show_game_info(self, item: QTreeWidgetItem, column: int):
         if not item or item.childCount() > 0 or column == 3:
@@ -353,11 +350,3 @@ class LibraryPage(QWidget):
         item.setToolTip(1, tooltip_text)
         logging.debug(f"Item '{data.get('title')}' aggiornato visivamente nell'albero.")
 
-    def find_console_for_rom(self, rom_path):
-         if not self.library_data: return None
-         for console, game_list in self.library_data.items():
-             for game_data in game_list:
-                 if game_data.get('rom_path') == rom_path:
-                     return console
-         logging.warning(f"Console non trovata per rom_path (find_console_for_rom): {rom_path}")
-         return None

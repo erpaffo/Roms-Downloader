@@ -199,7 +199,7 @@ DEFAULT_CORES = {
     "Nintendo GameBoy Advance": "mgba_libretro",
     "Nintendo GameBoy Color": "gambatte_libretro",
     "Nintendo 3DS": "citra_libretro",
-    "Nintendo DS": "melonds_libretro",
+    "Nintendo DS": "melondsds_libretro",
     "Nintendo 64": "mupen64plus_next_libretro",
     "Nintendo GameCube": "dolphin_libretro",
     "Nintendo Wii": "dolphin_libretro",
