@@ -1,0 +1,405 @@
+name: Build and Release Roms-Downloader
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Attiva il workflow quando viene creato un tag tipo v1.0.0
+
+jobs:
+  build_and_release:
+    name: Build and Package on ${{ matrix.platform.os_name }}
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false # Non cancellare altri job se uno fallisce
+      matrix:
+        platform:
+          - os_name: macOS
+            runner: macos-latest
+            asset_suffix_app: macos.zip
+            asset_suffix_installer: macos.dmg
+            pyinstaller_mode: --onedir # .app bundle è una directory
+            icon: assets/app_icon.icns
+            pyinstaller_separator: ':'
+
+          - os_name: Windows
+            runner: windows-latest
+            asset_suffix_app: windows.zip # Aggiunto ZIP anche per Windows
+            asset_suffix_installer: windows-setup.exe
+            pyinstaller_mode: --onedir # Necessario per Inno Setup per raccogliere i file
+            icon: assets/app_icon.ico
+            pyinstaller_separator: ';'
+
+          - os_name: Linux
+            runner: ubuntu-latest
+            asset_suffix_app: linux.zip # Aggiunto ZIP per Linux
+            asset_suffix_installer_deb: linux_amd64.deb
+            asset_suffix_installer_arch: linux.pkg.tar.zst
+            pyinstaller_mode: --onedir # Utile per pacchettizzazione
+            icon: assets/app_icon.png # Icona per il pacchetto, PyInstaller usa l'exe icon su Linux se disponibile
+            pyinstaller_separator: ':'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # Usa la versione Python richiesta
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install setuptools wheel # Necessari per PyInstaller
+
+    # --- Installazione Dipendenze OS specifiche ---
+    - name: Install macOS dependencies (create-dmg)
+      if: matrix.platform.runner == 'macos-latest'
+      run: brew install create-dmg
+
+    - name: Install Windows dependencies (Inno Setup)
+      if: matrix.platform.runner == 'windows-latest'
+      uses: crazy-max/ghaction-chocolatey@v3
+      with:
+        args: install innosetup --yes --no-progress --params "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+      # Aggiungi Inno Setup al PATH
+    - name: Add Inno Setup to PATH (Windows)
+      if: matrix.platform.runner == 'windows-latest'
+      run: echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Install Linux dependencies (dpkg, fuse, zip)
+      if: matrix.platform.runner == 'ubuntu-latest'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y build-essential libfuse2 zip # build-essential include dpkg-deb, zip per l'archivio
+
+    # --- Build con PyInstaller ---
+    - name: Build application with PyInstaller
+      run: |
+        python -m PyInstaller --noconfirm --windowed ${{ matrix.platform.pyinstaller_mode }} \
+        --name RomsDownloader \
+        --icon=${{ matrix.platform.icon }} \
+        --add-data="src/app_data${{ matrix.platform.pyinstaller_separator }}src/app_data" \
+        --add-data="src/gui/styles${{ matrix.platform.pyinstaller_separator }}src/gui/styles" \
+        run.py
+
+    # --- Packaging Specifico per OS ---
+
+    # macOS: Crea .zip e .dmg
+    - name: Package macOS (.zip and .dmg)
+      if: matrix.platform.runner == 'macos-latest'
+      run: |
+        APP_NAME="RomsDownloader"
+        APP_BUNDLE_PATH="dist/${APP_NAME}.app"
+        VERSION="${{ github.ref_name }}"
+        ZIP_OUTPUT="dist/${APP_NAME}-${VERSION}-${{ matrix.platform.asset_suffix_app }}"
+        DMG_OUTPUT="dist/${APP_NAME}-${VERSION}-${{ matrix.platform.asset_suffix_installer }}"
+        DMG_VOLUME_NAME="${APP_NAME} ${VERSION}"
+
+        # 1. Crea lo ZIP dell'applicazione .app
+        echo "Creating ZIP archive..."
+        ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE_PATH" "$ZIP_OUTPUT"
+        echo "ZIP created: $ZIP_OUTPUT"
+
+        # 2. Crea il DMG
+        echo "Creating DMG installer..."
+        create-dmg \
+          --volname "${DMG_VOLUME_NAME}" \
+          --volicon "${{ matrix.platform.icon }}" \
+          --window-pos 200 120 \
+          --window-size 500 350 \
+          --icon-size 100 \
+          --icon "${APP_NAME}.app" 125 170 \
+          --hide-extension "${APP_NAME}.app" \
+          --app-drop-link 375 170 \
+          "${DMG_OUTPUT}" \
+          "${APP_BUNDLE_PATH}"
+        echo "DMG created: ${DMG_OUTPUT}"
+
+    # Windows: Crea Installer con Inno Setup
+    - name: Create Inno Setup Script (Windows)
+      if: matrix.platform.runner == 'windows-latest'
+      shell: pwsh # Usa PowerShell per il multiline string più facilmente
+      run: |
+        $AppName = "RomsDownloader"
+        $AppVersion = "${{ github.ref_name }}" -replace '^v','' # Rimuove la 'v' iniziale per la versione
+        $AppPublisher = "erpaffo" # Cambia con il tuo nome/organizzazione
+        $AppURL = "https://github.com/erpaffo/Roms-Downloader" # Cambia con l'URL corretto
+        $SourceDir = "${{ github.workspace }}\dist\RomsDownloader" # Cartella creata da PyInstaller --onedir
+        $InstallerOutputDir = "${{ github.workspace }}\dist"
+        $InstallerOutputFilenameBase = "${AppName}-${{ github.ref_name }}-${{ matrix.platform.asset_suffix_installer }}" -replace '.exe$','' # Nome base senza .exe
+        $AppExeName = "RomsDownloader.exe"
+        $AppIcon = "${{ github.workspace }}\${{ matrix.platform.icon }}" # Percorso assoluto all'icona
+
+        # Script Inno Setup (.iss)
+        $InnoScript = @"
+        [Setup]
+        AppName=$AppName
+        AppVersion=$AppVersion
+        AppPublisher=$AppPublisher
+        AppPublisherURL=$AppURL
+        AppSupportURL=$AppURL
+        AppUpdatesURL=$AppURL
+        DefaultDirName={autopf}\\$AppName
+        DefaultGroupName=$AppName
+        DisableProgramGroupPage=yes
+        OutputDir=$InstallerOutputDir
+        OutputBaseFilename=$InstallerOutputFilenameBase
+        Compression=lzma
+        SolidCompression=yes
+        WizardStyle=modern
+        SetupIconFile=$AppIcon
+        UninstallDisplayIcon={app}\\$AppExeName
+
+        [Languages]
+        Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
+        Name: "english"; MessagesFile: "compiler:Default.isl"
+
+        [Tasks]
+        Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+        [Files]
+        Source: "$SourceDir\\$AppExeName"; DestDir: "{app}"; Flags: ignoreversion
+        Source: "$SourceDir\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+        ; NOTA: Includi tutti i file/cartelle necessari dalla directory di PyInstaller
+
+        [Icons]
+        Name: "{group}\\$AppName"; Filename: "{app}\\$AppExeName"
+        Name: "{group}\\{cm:UninstallProgram,$AppName}"; Filename: "{uninstallexe}"
+        Name: "{autodesktop}\\$AppName"; Filename: "{app}\\$AppExeName"; Tasks: desktopicon
+
+        [Run]
+        Filename: "{app}\\$AppExeName"; Description: "{cm:LaunchProgram,$AppName}"; Flags: nowait postinstall skipifsilent
+        "@
+
+        # Salva lo script .iss
+        $IssPath = Join-Path $InstallerOutputDir "setup.iss"
+        Set-Content -Path $IssPath -Value $InnoScript -Encoding UTF8
+        Write-Host "Inno Setup script created at $IssPath"
+
+    - name: Compile Inno Setup Installer (Windows)
+      if: matrix.platform.runner == 'windows-latest'
+      run: iscc.exe "${{ github.workspace }}\dist\setup.iss"
+
+    - name: Package Windows App (.zip)
+      if: matrix.platform.runner == 'windows-latest'
+      # Usa PowerShell per comprimere
+      shell: pwsh
+      run: |
+        Compress-Archive -Path dist\RomsDownloader\* -DestinationPath dist\RomsDownloader-${{ github.ref_name }}-${{ matrix.platform.asset_suffix_app }} -Force
+        Write-Host "Windows ZIP created."
+
+    # Linux: Crea .deb
+    - name: Create Debian Package (Linux)
+      if: matrix.platform.runner == 'ubuntu-latest'
+      run: |
+        APP_NAME="RomsDownloader"
+        PKG_NAME="romsdownloader" # Nome pacchetto minuscolo
+        VERSION_TAG="${{ github.ref_name }}"
+        VERSION=${VERSION_TAG#v} # Rimuove 'v' iniziale
+        DEB_ARCH="amd64" # Assumendo build a 64bit
+        MAINTAINER="erpaffo <tuo_email@example.com>" # CAMBIA EMAIL
+        DESCRIPTION="Un'applicazione per cercare, scaricare e gestire ROMs."
+        DEB_BUILD_DIR="build/debian/${PKG_NAME}"
+        DIST_DIR="dist"
+        PYINSTALLER_APP_DIR="$DIST_DIR/$APP_NAME"
+        FINAL_DEB_NAME="${DIST_DIR}/${PKG_NAME}_${VERSION}_${DEB_ARCH}.deb"
+
+        echo "Creating Debian package structure..."
+        # 1. Crea la struttura di directory
+        mkdir -p "${DEB_BUILD_DIR}/DEBIAN"
+        mkdir -p "${DEB_BUILD_DIR}/opt/${PKG_NAME}"
+        mkdir -p "${DEB_BUILD_DIR}/usr/bin"
+        mkdir -p "${DEB_BUILD_DIR}/usr/share/applications"
+        mkdir -p "${DEB_BUILD_DIR}/usr/share/icons/hicolor/scalable/apps"
+
+        echo "Copying application files..."
+        # 2. Copia l'intera cartella dell'app in /opt/
+        cp -r "${PYINSTALLER_APP_DIR}/." "${DEB_BUILD_DIR}/opt/${PKG_NAME}/"
+
+        echo "Creating wrapper script..."
+        # Crea uno script wrapper in /usr/bin
+        cat <<EOF > "${DEB_BUILD_DIR}/usr/bin/${PKG_NAME}"
+        #!/bin/sh
+        exec /opt/${PKG_NAME}/RomsDownloader "\$@"
+        EOF
+        chmod +x "${DEB_BUILD_DIR}/usr/bin/${PKG_NAME}"
+
+        echo "Creating DEBIAN/control file..."
+        # 3. Crea il file DEBIAN/control
+        # VERIFICA QUESTE DIPENDENZE! Potrebbero servire: python3-pyside6.qtcore, python3-pyside6.qtgui, etc. O solo quelle base.
+        cat <<EOF > "${DEB_BUILD_DIR}/DEBIAN/control"
+        Package: ${PKG_NAME}
+        Version: ${VERSION}
+        Section: games
+        Priority: optional
+        Architecture: ${DEB_ARCH}
+        Depends: libc6 (>= 2.17), libfuse2 # Esempio, VERIFICA LE DIPENDENZE REALI!
+        Maintainer: ${MAINTAINER}
+        Description: ${DESCRIPTION}
+         Applicazione multipiattaforma per ROMs con integrazione RetroArch.
+        EOF
+
+        echo "Creating .desktop file..."
+        # 4. Crea un file .desktop (o copia da assets/)
+        cat <<EOF > "${DEB_BUILD_DIR}/usr/share/applications/${PKG_NAME}.desktop"
+        [Desktop Entry]
+        Name=Roms Downloader
+        Exec=/usr/bin/${PKG_NAME}
+        Icon=${PKG_NAME}
+        Type=Application
+        Categories=Game;Utility;
+        Comment=${DESCRIPTION}
+        Terminal=false
+        EOF
+
+        echo "Copying icon..."
+        # 5. Copia l'icona (assicurati che esista in assets/)
+        if [ -f "${{ matrix.platform.icon }}" ]; then
+          cp "${{ matrix.platform.icon }}" "${DEB_BUILD_DIR}/usr/share/icons/hicolor/scalable/apps/${PKG_NAME}.png"
+        else
+          echo "Warning: Icon file ${{ matrix.platform.icon }} not found. Skipping icon installation for deb."
+        fi
+
+        echo "Setting permissions..."
+        # 6. Imposta permessi corretti
+        find "${DEB_BUILD_DIR}" -type d -exec chmod 0755 {} \;
+        find "${DEB_BUILD_DIR}/opt" -type f -exec chmod 0644 {} \; # File dati
+        chmod 0755 "${DEB_BUILD_DIR}/opt/${PKG_NAME}/RomsDownloader" # Eseguibile principale
+        chmod 0755 "${DEB_BUILD_DIR}/usr/bin/${PKG_NAME}" # Wrapper
+        chmod 0644 "${DEB_BUILD_DIR}/usr/share/applications/${PKG_NAME}.desktop"
+        find "${DEB_BUILD_DIR}/usr/share/icons" -type f -exec chmod 0644 {} \;
+        chmod -R 0755 "${DEB_BUILD_DIR}/DEBIAN" # Script di controllo
+
+        echo "Building .deb package..."
+        # 7. Costruisci il pacchetto .deb
+        dpkg-deb --build "${DEB_BUILD_DIR}" "${FINAL_DEB_NAME}"
+        echo "Debian package created: ${FINAL_DEB_NAME}"
+
+    # Linux: Crea .pkg.tar.zst (Arch) usando Docker
+    - name: Create Arch Package (Linux - using Docker)
+      if: matrix.platform.runner == 'ubuntu-latest'
+      run: |
+        APP_NAME="RomsDownloader"
+        PKG_NAME="romsdownloader"
+        VERSION_TAG="${{ github.ref_name }}"
+        VERSION=${VERSION_TAG#v} # Rimuove 'v'
+        MAINTAINER="erpaffo <tuo_email@example.com>" # CAMBIA EMAIL
+        GITHUB_WORKSPACE="${{ github.workspace }}"
+        DIST_DIR="dist" # Directory dove PyInstaller ha costruito l'app
+        ARCH_BUILD_DIR="build/arch" # Directory locale per i file di build Arch
+        FINAL_ARCH_PKG_PATTERN="${DIST_DIR}/${PKG_NAME}-${VERSION}-*.pkg.tar.zst" # Pattern per trovare il file finale
+
+        echo "Preparing Arch package build files..."
+        mkdir -p ${ARCH_BUILD_DIR}
+        # Copia l'icona e il file .desktop nella directory di build Arch se esistono
+        if [ -f "assets/${PKG_NAME}.desktop" ]; then cp "assets/${PKG_NAME}.desktop" "${ARCH_BUILD_DIR}/"; fi
+        if [ -f "${{ matrix.platform.icon }}" ]; then cp "${{ matrix.platform.icon }}" "${ARCH_BUILD_DIR}/"; fi
+
+        # Crea il file PKGBUILD
+        cat <<EOF > ${ARCH_BUILD_DIR}/PKGBUILD
+        # Maintainer: $MAINTAINER
+        pkgname=$PKG_NAME
+        pkgver=$VERSION
+        pkgrel=1
+        pkgdesc="Un'applicazione per cercare, scaricare e gestire ROMs."
+        arch=('x86_64')
+        url="https://github.com/erpaffo/Roms-Downloader" # Cambia URL
+        license=('MIT') # O la tua licenza
+        # Dipendenze Arch necessarie per eseguire l'app (VERIFICA CON LDD!)
+        depends=('qt6-base' 'qt6-svg' 'fuse2' 'python') # Esempio minimo, PySide6 potrebbe essere necessario se non bundleato
+        optdepends=('retroarch: Per lanciare i giochi')
+        # Prendiamo la build di PyInstaller montata nel container
+        source=("appdir::file://./app_build_dir"
+                "${PKG_NAME}.desktop::file://./${PKG_NAME}.desktop" # File desktop locale
+                "icon.png::file://./$(basename ${{ matrix.platform.icon }})" # Icona locale
+                )
+        sha256sums=('SKIP'
+                    'SKIP'
+                    'SKIP'
+                   )
+
+        prepare() {
+          # Nulla da preparare se usiamo la build PyInstaller direttamente
+          # Copia la directory buildata da PyInstaller
+          cp -r /src/$DIST_DIR/$APP_NAME ./app_build_dir
+          echo "App directory copied for build."
+        }
+
+        package() {
+          # Installa l'intera applicazione in /opt/
+          install -d "\$pkgdir/opt/$PKG_NAME"
+          cp -r "\$srcdir/app_build_dir/." "\$pkgdir/opt/$PKG_NAME/"
+          # Imposta permessi sull'eseguibile principale
+          chmod 755 "\$pkgdir/opt/$PKG_NAME/$APP_NAME"
+
+          # Installa lo script wrapper
+          install -Dm755 <(echo -e "#!/bin/sh\nexec /opt/$PKG_NAME/$APP_NAME \"\$@\"") "\$pkgdir/usr/bin/$PKG_NAME"
+
+          # Installa l'icona
+          install -Dm644 "\$srcdir/icon.png" "\$pkgdir/usr/share/icons/hicolor/scalable/apps/$PKG_NAME.png"
+
+          # Installa il file .desktop
+          install -Dm644 "\$srcdir/${PKG_NAME}.desktop" "\$pkgdir/usr/share/applications/$PKG_NAME.desktop"
+        }
+        EOF
+
+        echo "Building Arch package inside Docker container..."
+        # Esegui Docker per costruire il pacchetto
+        # Monta la directory di build Arch oltre alla workspace completa
+        docker run --rm \
+          -v "$GITHUB_WORKSPACE:/src" \
+          -v "$GITHUB_WORKSPACE/${ARCH_BUILD_DIR}:/build_files" \
+          archlinux:latest \
+          /bin/bash -c "
+            echo '--- Inside Arch Docker ---'
+            pacman -Syu --noconfirm base-devel git sudo # Installa strumenti base
+            # Crea l'utente builduser e dagli permessi sudo senza password
+            useradd -m builduser
+            echo 'builduser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builduser
+            chmod 0440 /etc/sudoers.d/builduser
+
+            # Cambia proprietario della directory di build nel container
+            chown -R builduser:builduser /build_files
+            cd /build_files
+
+            echo 'Running makepkg as builduser...'
+            # Usa sudo per eseguire makepkg come builduser
+            sudo -u builduser makepkg -sf --noconfirm --skippgpcheck
+
+            echo 'Copying built package...'
+            # Copia il pacchetto risultante nella directory dist montata
+            cp *.pkg.tar.zst /src/$DIST_DIR/
+            echo '--- Exiting Arch Docker ---'
+          "
+        echo "Arch package build attempt finished."
+        ls -la $DIST_DIR # Verifica che il pacchetto sia stato copiato
+
+    # Linux: Crea .zip
+    - name: Package Linux App (.zip)
+      if: matrix.platform.runner == 'ubuntu-latest'
+      run: |
+        cd dist # Entra nella cartella dist per creare lo zip
+        zip -r RomsDownloader-${{ github.ref_name }}-${{ matrix.platform.asset_suffix_app }} RomsDownloader/ -x "*.pyc" -x "__pycache__/*"
+        cd ..
+        echo "Linux ZIP created."
+
+    # --- Crea Release e Carica Artefatti ---
+    - name: Create Release and Upload Assets
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        # Pattern per trovare TUTTI gli artefatti desiderati
+        files: |
+          dist/RomsDownloader-${{ github.ref_name }}-*.zip
+          dist/RomsDownloader-${{ github.ref_name }}-*.dmg
+          dist/RomsDownloader-${{ github.ref_name }}-*setup.exe
+          dist/${{ env.PKG_NAME || 'romsdownloader' }}_*_${{ env.DEB_ARCH || 'amd64' }}.deb
+          dist/${{ env.PKG_NAME || 'romsdownloader' }}-*.pkg.tar.zst
+        # Aggiungi variabili d'ambiente se i nomi dei pacchetti sono dinamici
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Definisci variabili usate nei pattern 'files' se necessario
+        PKG_NAME: romsdownloader
+        DEB_ARCH: amd64

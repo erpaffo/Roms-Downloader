@@ -22,3 +22,4 @@ Dockerfile
 output_deb/
 cmd.sh
 .env
+RomsDownloader_Installer.dmg
