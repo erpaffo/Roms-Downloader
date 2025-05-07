@@ -3,13 +3,19 @@ import logging
 import os
 import signal
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
-load_dotenv()
-logging.info("Variabili d'ambiente caricate da .env (se trovato).")
+# Carica .env dalla directory corrente o dalla directory dell'applicazione
+env_path = Path('.env')
+if not env_path.exists():
+    env_path = Path(__file__).parent / '.env'
+
+load_dotenv(env_path)
+logging.info(f"Variabili d'ambiente caricate da {env_path} (se trovato).")
 
 from src.gui.main_window import MainWindow
 
