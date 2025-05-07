@@ -3,31 +3,33 @@ import os
 import sys
 import shutil
 from PySide6.QtCore import QSettings
+
 try:
-     import platformdirs
+    import platformdirs
 except ImportError:
-     print("Errore: La libreria 'platformdirs' non è installata.")
-     print("Esegui: pip install platformdirs")
-     platformdirs = None
+    print("Errore: La libreria 'platformdirs' non è installata.")
+    print("Esegui: pip install platformdirs")
+    platformdirs = None
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
 
 def get_app_base_path():
     """Determines the base directory for resource loading."""
-    if getattr(sys, 'frozen', False):
-        if hasattr(sys, '_MEIPASS'):
-             return sys._MEIPASS
+    if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
+            return sys._MEIPASS
         else:
-             return os.path.dirname(sys.executable)
+            return os.path.dirname(sys.executable)
     else:
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller.
-        Assumes relative_path is relative to the project root (e.g., "src/data/file.txt").
+    """Get absolute path to resource, works for dev and for PyInstaller.
+    Assumes relative_path is relative to the project root (e.g., "src/data/file.txt").
     """
     try:
         base_path = get_app_base_path()
@@ -37,17 +39,18 @@ def resource_path(relative_path):
     final_path = os.path.join(base_path, relative_path)
     return final_path
 
+
 APP_NAME = "RomsDownloader"
 AUTHOR_NAME = "YourAppNameOrCompany"
 
 if platformdirs:
-     USER_DATA_DIR = platformdirs.user_data_dir(APP_NAME, AUTHOR_NAME)
-     USER_CONFIG_DIR = platformdirs.user_config_dir(APP_NAME, AUTHOR_NAME)
-     USER_CACHE_DIR = platformdirs.user_cache_dir(APP_NAME, AUTHOR_NAME)
+    USER_DATA_DIR = platformdirs.user_data_dir(APP_NAME, AUTHOR_NAME)
+    USER_CONFIG_DIR = platformdirs.user_config_dir(APP_NAME, AUTHOR_NAME)
+    USER_CACHE_DIR = platformdirs.user_cache_dir(APP_NAME, AUTHOR_NAME)
 else:
-     USER_DATA_DIR = os.path.join(os.path.expanduser("~"), ".local", "share", APP_NAME)
-     USER_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", APP_NAME)
-     USER_CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", APP_NAME)
+    USER_DATA_DIR = os.path.join(os.path.expanduser("~"), ".local", "share", APP_NAME)
+    USER_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", APP_NAME)
+    USER_CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", APP_NAME)
 
 DATA_DIR = USER_DATA_DIR
 if not os.path.exists(DATA_DIR):
@@ -59,7 +62,7 @@ QSettings.setDefaultFormat(QSettings.Format.IniFormat)
 settings = QSettings(SETTINGS_ORG, SETTINGS_APP)
 
 STYLES_REL_PATH = os.path.join("src", "gui", "styles")
-DEFAULT_THEME_FILENAME = "default_light_theme.qss" # O il nome del tuo tema predefinito
+DEFAULT_THEME_FILENAME = "default_light_theme.qss"  # O il nome del tuo tema predefinito
 
 
 DEFAULT_DOWNLOADS_FOLDER = os.path.join(DATA_DIR, "downloads")
@@ -89,12 +92,16 @@ if not os.path.exists(SAVES_BASE_FOLDER):
         os.makedirs(SAVES_BASE_FOLDER, exist_ok=True)
         logging.info(f"Cartella base salvataggi creata: {SAVES_BASE_FOLDER}")
     except OSError as e:
-        logging.error(f"Impossibile creare cartella base salvataggi '{SAVES_BASE_FOLDER}': {e}")
+        logging.error(
+            f"Impossibile creare cartella base salvataggi '{SAVES_BASE_FOLDER}': {e}"
+        )
 
 
 _EMULATOR_REL_PATH_SRC = os.path.join("src", "app_data", "emulator")
 
-RETROARCH_EXTRACT_FOLDER = resource_path(os.path.join(_EMULATOR_REL_PATH_SRC, "RetroArch"))
+RETROARCH_EXTRACT_FOLDER = resource_path(
+    os.path.join(_EMULATOR_REL_PATH_SRC, "RetroArch")
+)
 CORES_FOLDER = resource_path(os.path.join(_EMULATOR_REL_PATH_SRC, "cores"))
 
 
@@ -108,11 +115,16 @@ def get_save_directory(console_name: str) -> str:
     if not os.path.exists(console_save_dir):
         try:
             os.makedirs(console_save_dir, exist_ok=True)
-            logging.info(f"Cartella salvataggi creata per '{console_name}': {console_save_dir}")
+            logging.info(
+                f"Cartella salvataggi creata per '{console_name}': {console_save_dir}"
+            )
         except OSError as e:
-            logging.error(f"Impossibile creare cartella salvataggi per '{console_name}' in '{console_save_dir}': {e}")
+            logging.error(
+                f"Impossibile creare cartella salvataggi per '{console_name}' in '{console_save_dir}': {e}"
+            )
             return SAVES_BASE_FOLDER
     return console_save_dir
+
 
 def copy_default_data_on_first_run():
     """
@@ -134,28 +146,37 @@ def copy_default_data_on_first_run():
         try:
             os.makedirs(target_config_dir, exist_ok=True)
             if sys.version_info >= (3, 8):
-                shutil.copytree(source_config_dir_abs, target_config_dir, dirs_exist_ok=True)
+                shutil.copytree(
+                    source_config_dir_abs, target_config_dir, dirs_exist_ok=True
+                )
             else:
                 for item in os.listdir(source_config_dir_abs):
                     s = os.path.join(source_config_dir_abs, item)
                     d = os.path.join(target_config_dir, item)
                     if os.path.isfile(s):
-                         shutil.copy2(s, d)
+                        shutil.copy2(s, d)
             logging.info(f"Default emulator configs copied to: {target_config_dir}")
         except FileExistsError:
-             logging.warning(f"Target config directory '{target_config_dir}' already exists (unexpected on first run). Skipping copy.")
+            logging.warning(
+                f"Target config directory '{target_config_dir}' already exists (unexpected on first run). Skipping copy."
+            )
         except Exception as e:
-             logging.error(f"Failed to copy default emulator configs from '{source_config_dir_abs}' to '{target_config_dir}': {e}")
+            logging.error(
+                f"Failed to copy default emulator configs from '{source_config_dir_abs}' to '{target_config_dir}': {e}"
+            )
     else:
-        logging.warning(f"Bundled default config directory not found at '{source_config_dir_abs}'. Cannot copy defaults.")
+        logging.warning(
+            f"Bundled default config directory not found at '{source_config_dir_abs}'. Cannot copy defaults."
+        )
 
     try:
         os.makedirs(USER_CONFIG_DIR, exist_ok=True)
-        with open(marker_file, 'w') as f:
-            f.write('Setup complete')
+        with open(marker_file, "w") as f:
+            f.write("Setup complete")
         logging.info(f"First run marker created: {marker_file}")
     except Exception as e:
         logging.error(f"Failed to create first run marker file '{marker_file}': {e}")
+
 
 copy_default_data_on_first_run()
 
@@ -179,7 +200,7 @@ CONSOLES = {
     "Sony PlayStation": "Redump/Sony%20-%20PlayStation/",
     "Sony PlayStation 2": "Redump/Sony%20-%20PlayStation%202/",
     "Sony PlayStation 3": "Redump/Sony%20-%20PlayStation%203/",
-    "Sony PlayStation Portable": "Redump/Sony%20-%20PlayStation%20Portable/"
+    "Sony PlayStation Portable": "Redump/Sony%20-%20PlayStation%20Portable/",
 }
 
 if sys.platform.startswith("win"):
@@ -206,7 +227,7 @@ DEFAULT_CORES = {
     "Sony PlayStation": "pcsx_rearmed_libretro",
     "Sony PlayStation 2": "pcsx2_libretro",
     "Sony PlayStation 3": "rpcs3_libretro",
-    "Sony PlayStation Portable": "ppsspp_libretro"
+    "Sony PlayStation Portable": "ppsspp_libretro",
 }
 
 CORE_SETTINGS_DEFAULTS = {
@@ -217,6 +238,7 @@ CORE_SETTINGS_DEFAULTS = {
     "input_driver": "",
 }
 
+
 def set_user_download_folder(new_path):
     """Sets the user download folder path and saves it to settings."""
     global USER_DOWNLOADS_FOLDER
@@ -226,20 +248,27 @@ def set_user_download_folder(new_path):
     settings.setValue("download_folder", USER_DOWNLOADS_FOLDER)
     logging.info(f"User download folder set to: {USER_DOWNLOADS_FOLDER}")
 
+
 MAX_CONCURRENT_DOWNLOADS = int(settings.value("max_dl", 4))
+
+
 def set_max_concurrent_downloads(value):
     """Sets the maximum concurrent downloads and saves it to settings."""
     global MAX_CONCURRENT_DOWNLOADS
     try:
         val_int = int(value)
         if 1 <= val_int <= 10:
-             MAX_CONCURRENT_DOWNLOADS = val_int
-             settings.setValue("max_dl", MAX_CONCURRENT_DOWNLOADS)
-             logging.info(f"Max concurrent downloads set to: {MAX_CONCURRENT_DOWNLOADS}")
+            MAX_CONCURRENT_DOWNLOADS = val_int
+            settings.setValue("max_dl", MAX_CONCURRENT_DOWNLOADS)
+            logging.info(f"Max concurrent downloads set to: {MAX_CONCURRENT_DOWNLOADS}")
         else:
-             logging.warning(f"Invalid value for max concurrent downloads: {value}. Must be between 1 and 10.")
+            logging.warning(
+                f"Invalid value for max concurrent downloads: {value}. Must be between 1 and 10."
+            )
     except ValueError:
-         logging.error(f"Invalid non-integer value for max concurrent downloads: {value}")
+        logging.error(
+            f"Invalid non-integer value for max concurrent downloads: {value}"
+        )
 
 
 def add_console(name, link):
@@ -252,6 +281,7 @@ def add_console(name, link):
         logging.info(f"Console '{name}' added/updated at runtime.")
     else:
         logging.warning("Attempted to add console with empty name or link.")
+
 
 METADATA_FOLDER = os.path.join(USER_DATA_DIR, "metadata")
 COVERS_FOLDER = os.path.join(METADATA_FOLDER, "covers")

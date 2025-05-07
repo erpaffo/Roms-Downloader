@@ -12,20 +12,31 @@ from src.config import CORE_SETTINGS_DEFAULTS
 from urllib.parse import unquote
 
 
-ALLOWED_NATIONS = {"Japan", "USA", "Europe", "Spain", "Italy", "Germany", "France", "China"}
+ALLOWED_NATIONS = {
+    "Japan",
+    "USA",
+    "Europe",
+    "Spain",
+    "Italy",
+    "Germany",
+    "France",
+    "China",
+}
+
 
 def extract_nations(game_name):
     """
     Estrae le nazioni dal nome del gioco cercando un pattern tra parentesi.
     Ad esempio: "Final Fantasy (Europe, USA)" restituirà ["Europe", "USA"].
     """
-    pattern = r'\((.*?)\)'
+    pattern = r"\((.*?)\)"
     match = re.search(pattern, game_name)
     if match:
         nations_str = match.group(1)
-        nations = [s.strip() for s in nations_str.split(',')]
+        nations = [s.strip() for s in nations_str.split(",")]
         return [nation for nation in nations if nation in ALLOWED_NATIONS]
     return []
+
 
 def extract_zip(zip_path, extract_to):
     """
@@ -33,13 +44,14 @@ def extract_zip(zip_path, extract_to):
     Se l'estrazione ha successo, elimina il file ZIP.
     """
     try:
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(extract_to)
         os.remove(zip_path)
         return True
     except Exception as e:
         print(f"Errore nell'estrazione: {e}")
         return False
+
 
 def find_retroarch():
     """
@@ -54,33 +66,46 @@ def find_retroarch():
         logging.info(f"RetroArch found in PATH: {path_in_syspath}")
         return path_in_syspath
     logging.info(RETROARCH_EXTRACT_FOLDER)
-    if RETROARCH_EXTRACT_FOLDER: 
+    if RETROARCH_EXTRACT_FOLDER:
         exe_name = "retroarch.exe" if sys.platform.startswith("win") else "retroarch"
         path_in_appdata = os.path.join(RETROARCH_EXTRACT_FOLDER, exe_name)
-        logging.info(f"Checking for RetroArch in configured app data path: {path_in_appdata}")
+        logging.info(
+            f"Checking for RetroArch in configured app data path: {path_in_appdata}"
+        )
         if os.path.exists(path_in_appdata):
-            logging.info(f"RetroArch found in configured app data path: {path_in_appdata}")
+            logging.info(
+                f"RetroArch found in configured app data path: {path_in_appdata}"
+            )
             return os.path.abspath(path_in_appdata)
     else:
-         logging.warning("RETROARCH_EXTRACT_FOLDER non definito o non importato, salto controllo")
-
+        logging.warning(
+            "RETROARCH_EXTRACT_FOLDER non definito o non importato, salto controllo"
+        )
 
     possible = []
     if sys.platform.startswith("win"):
-        possible = [r"C:\RetroArch-Win64\retroarch.exe", r"C:\Program Files\RetroArch\retroarch.exe"]
+        possible = [
+            r"C:\RetroArch-Win64\retroarch.exe",
+            r"C:\Program Files\RetroArch\retroarch.exe",
+        ]
     elif sys.platform.startswith("linux"):
         possible = ["/usr/bin/retroarch", "/usr/local/bin/retroarch"]
     elif sys.platform.startswith("darwin"):
         possible = ["/Applications/RetroArch.app/Contents/MacOS/retroarch"]
 
-    logging.debug(f"RetroArch not found in PATH or app data. Checking common paths: {possible}")
+    logging.debug(
+        f"RetroArch not found in PATH or app data. Checking common paths: {possible}"
+    )
     for p in possible:
         if os.path.exists(p):
             logging.info(f"RetroArch found in common location: {p}")
             return p
 
-    logging.error("RetroArch executable not found in PATH, app data, or common locations.")
+    logging.error(
+        "RetroArch executable not found in PATH, app data, or common locations."
+    )
     return None
+
 
 def update_emulator_config(config_path, new_bindings):
     """
@@ -107,8 +132,11 @@ def update_emulator_config(config_path, new_bindings):
 
     with open(config_path, "w") as f:
         f.writelines(lines)
- 
-def create_default_core_config(core_config_path: str, console_name: str, core_base_name: str):
+
+
+def create_default_core_config(
+    core_config_path: str, console_name: str, core_base_name: str
+):
     """
     Creates a default core-specific config file if it doesn't exist.
     Merges global defaults, core setting defaults, console P1 defaults,
@@ -119,7 +147,9 @@ def create_default_core_config(core_config_path: str, console_name: str, core_ba
         logging.debug(f"File config core già esistente, non creato: {core_config_path}")
         return True
 
-    logging.info(f"Creazione file config default per '{console_name}'/'{core_base_name}' in: {core_config_path}")
+    logging.info(
+        f"Creazione file config default per '{console_name}'/'{core_base_name}' in: {core_config_path}"
+    )
 
     try:
         combined_settings = DEFAULT_KEYBINDINGS.copy()
@@ -128,15 +158,19 @@ def create_default_core_config(core_config_path: str, console_name: str, core_ba
         combined_settings.update(p1_defaults)
 
         save_dir = get_save_directory(console_name)
-        combined_settings['savefile_directory'] = os.path.abspath(save_dir)
-        combined_settings['savestate_directory'] = os.path.abspath(save_dir)
-        combined_settings['system_directory'] = os.path.abspath(SYSTEM_FOLDER)
+        combined_settings["savefile_directory"] = os.path.abspath(save_dir)
+        combined_settings["savestate_directory"] = os.path.abspath(save_dir)
+        combined_settings["system_directory"] = os.path.abspath(SYSTEM_FOLDER)
 
         final_settings = {}
-        known_hotkey_commands = set(DEFAULT_KEYBINDINGS.keys()).union(set(p1_defaults.keys()))
+        known_hotkey_commands = set(DEFAULT_KEYBINDINGS.keys()).union(
+            set(p1_defaults.keys())
+        )
 
         for command, value in combined_settings.items():
-            is_known_input = command.startswith("input_") and command in known_hotkey_commands
+            is_known_input = (
+                command.startswith("input_") and command in known_hotkey_commands
+            )
             is_bool = str(value).lower() in ["true", "false"]
             is_path = command.endswith("_directory")
 
@@ -150,8 +184,11 @@ def create_default_core_config(core_config_path: str, console_name: str, core_ba
         return True
 
     except Exception as e:
-        logging.exception(f"Errore imprevisto durante la creazione del file config default '{core_config_path}': {e}")
+        logging.exception(
+            f"Errore imprevisto durante la creazione del file config default '{core_config_path}': {e}"
+        )
         return False
+
 
 def clean_rom_title(filename):
     """Pulisce il nome del file ROM rimuovendo tag comuni, estensione, ecc."""
@@ -165,48 +202,47 @@ def clean_rom_title(filename):
         name_decoded = filename
 
     name_without_ext, _ = os.path.splitext(name_decoded)
-    
+
     cleaned = name_without_ext
     logging.debug(f"Pulizia titolo: Inizio con '{cleaned}'")
 
     patterns_to_remove = [
         # 1. Tag Dump/Info tra Quadre (spesso all'inizio o fine)
-        r'^\s*\[.*?\]\s*',        
-        r'\s*\[.*?\]\s*$',        
+        r"^\s*\[.*?\]\s*",
+        r"\s*\[.*?\]\s*$",
         # 2. Tag Revisione/Versione Specifici
-        r'\s*\((?:Rev|v|Version|Ver)\s*[\w\.]+\)\s*',
+        r"\s*\((?:Rev|v|Version|Ver)\s*[\w\.]+\)\s*",
         # 3. Tag Beta/Proto/Demo/Etc.
-        r'\s*\((?:Beta|Proto|Sample|Demo|Pre-Release|Promo|Test)\w*\)\s*',
+        r"\s*\((?:Beta|Proto|Sample|Demo|Pre-Release|Promo|Test)\w*\)\s*",
         # 4. Tag Regione/Lingua (più robusto)
-        r'\s*\(\s*(\b(?:USA|Europe|World|Japan|France|Germany|Spain|Italy|Korea|China|Australia|Brazil|Netherlands|Sweden|Denmark|Finland|Russia|En|Fr|De|Es|It|Ja|Ko|Zh|Nl|Pt|Sv|No|Da|Fi|Ru|Pl|Cz|Hu|Tr)\b\s*,?\s*)+\)\s*',
+        r"\s*\(\s*(\b(?:USA|Europe|World|Japan|France|Germany|Spain|Italy|Korea|China|Australia|Brazil|Netherlands|Sweden|Denmark|Finland|Russia|En|Fr|De|Es|It|Ja|Ko|Zh|Nl|Pt|Sv|No|Da|Fi|Ru|Pl|Cz|Hu|Tr)\b\s*,?\s*)+\)\s*",
         # 5. Tag Disco/Traccia
-        r'\s*\(Disc\s*\d+(?:-\d+)?\s*(?:of\s*\d+)?\)\s*',
-        r'\s*\(Track\s*\d+\)\s*',
-        r'\s*\((?:Bonus|Soundtrack|Demo)\s*Disc\)\s*',
+        r"\s*\(Disc\s*\d+(?:-\d+)?\s*(?:of\s*\d+)?\)\s*",
+        r"\s*\(Track\s*\d+\)\s*",
+        r"\s*\((?:Bonus|Soundtrack|Demo)\s*Disc\)\s*",
         # 6. Tag Specifici (NDSi Enhanced, etc.) - Aggiungine altri se necessario
-        r'\s*\((?:NDSi Enhanced|DSi Enhanced|GBC Enhanced|SGB Enhanced)\)\s*',
-        r'\s*\((?:Unl|Pirate|Hack|Translated|Public Domain|PD|Homebrew)\w*\)\s*',
-        r'\s*\((?:Alt|Sample|Remaster|Remix)\w*\)\s*',
+        r"\s*\((?:NDSi Enhanced|DSi Enhanced|GBC Enhanced|SGB Enhanced)\)\s*",
+        r"\s*\((?:Unl|Pirate|Hack|Translated|Public Domain|PD|Homebrew)\w*\)\s*",
+        r"\s*\((?:Alt|Sample|Remaster|Remix)\w*\)\s*",
         # 7. Parentesi con date (es. YYYY-MM-DD o Anno) alla fine
-        r'\s*\(\s*\d{4}(?:-\d{2}-\d{2})?\s*\)\s*$',
+        r"\s*\(\s*\d{4}(?:-\d{2}-\d{2})?\s*\)\s*$",
         # 8. Rimuovi (tm), (r) alla fine delle parole
-        r'\b(?:™|\(tm\)|\(r\)|®)\b',
+        r"\b(?:™|\(tm\)|\(r\)|®)\b",
         # 9. Rimuovi parentesi/quadre vuote o con solo spazi, rimaste dopo le pulizie
-        r'\s*\(+\s*\)+\s*',
-        r'\s*\[+\s*\]+\s*',
+        r"\s*\(+\s*\)+\s*",
+        r"\s*\[+\s*\]+\s*",
     ]
 
     previous_cleaned = ""
     loops = 0
-    while previous_cleaned != cleaned and loops < 10: 
+    while previous_cleaned != cleaned and loops < 10:
         previous_cleaned = cleaned
         for _, pattern in enumerate(patterns_to_remove):
-            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE).strip()
-        cleaned = ' '.join(cleaned.split()).strip()
-        cleaned = re.sub(r'^[_\-\s]+|[_\-\s]+$', '', cleaned).strip()
+            cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE).strip()
+        cleaned = " ".join(cleaned.split()).strip()
+        cleaned = re.sub(r"^[_\-\s]+|[_\-\s]+$", "", cleaned).strip()
         loops += 1
 
     logging.debug(f"Pulizia titolo: Risultato finale '{cleaned}'")
 
     return cleaned if cleaned else name_without_ext
-

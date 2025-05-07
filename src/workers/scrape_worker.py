@@ -1,14 +1,15 @@
 from PySide6.QtCore import QObject, Signal
 from src import scraping
 
+
 class ScrapeWorker(QObject):
     finished = Signal(list)
     progress = Signal(str)
-    
+
     def __init__(self, console_name):
         super().__init__()
         self.console_name = console_name
-    
+
     def run(self):
         self.progress.emit(f"Inizio scraping per '{self.console_name}'...")
         try:

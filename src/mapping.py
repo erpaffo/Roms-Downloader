@@ -46,6 +46,7 @@ TITLE_TERM_MAP = {
 
 COMMON_LOCAL_WORDS_TO_REMOVE = ["Versione", "Edizione", "Edition", "Ausgabe"]
 
+
 def apply_title_term_map(title: str) -> str:
     modified_title = title.lower()
     if not title:
@@ -54,16 +55,19 @@ def apply_title_term_map(title: str) -> str:
     sorted_keys = sorted(TITLE_TERM_MAP.keys(), key=len, reverse=True)
 
     for term in sorted_keys:
-        pattern = r'\b' + re.escape(term) + r'\b'
-        modified_title = re.sub(pattern, TITLE_TERM_MAP[term], modified_title, flags=re.IGNORECASE)
+        pattern = r"\b" + re.escape(term) + r"\b"
+        modified_title = re.sub(
+            pattern, TITLE_TERM_MAP[term], modified_title, flags=re.IGNORECASE
+        )
 
     return modified_title.title()
+
 
 def simplify_title(title: str) -> str:
     simplified = title
     for word in COMMON_LOCAL_WORDS_TO_REMOVE:
-         pattern = r'\b' + re.escape(word) + r'\b\s*'
-         simplified = re.sub(pattern, '', simplified, flags=re.IGNORECASE)
+        pattern = r"\b" + re.escape(word) + r"\b\s*"
+        simplified = re.sub(pattern, "", simplified, flags=re.IGNORECASE)
 
     simplified = " ".join(simplified.split()).strip()
     return simplified

@@ -30,14 +30,14 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_right": "right",
         "input_player1_l3": "v",  # Assuming L3 is a click of the left analog stick
         "input_player1_r3": "b",  # Assuming R3 is a click of the right analog stick
-        "input_player1_analog_left": "i", # Placeholder for left analog stick (digital up)
-        "input_player1_analog_right": "j", # Placeholder for left analog stick (digital down)
-        "input_player1_analog_up": "k",   # Placeholder for left analog stick (digital left)
-        "input_player1_analog_down": "l", # Placeholder for left analog stick (digital right)
-        "input_player1_analog_r_left": "n", # Placeholder for right analog stick (digital up)
-        "input_player1_analog_r_right": "m", # Placeholder for right analog stick (digital down)
-        "input_player1_analog_r_up": ",",   # Placeholder for right analog stick (digital left)
-        "input_player1_analog_r_down": ".", # Placeholder for right analog stick (digital right)
+        "input_player1_analog_left": "i",  # Placeholder for left analog stick (digital up)
+        "input_player1_analog_right": "j",  # Placeholder for left analog stick (digital down)
+        "input_player1_analog_up": "k",  # Placeholder for left analog stick (digital left)
+        "input_player1_analog_down": "l",  # Placeholder for left analog stick (digital right)
+        "input_player1_analog_r_left": "n",  # Placeholder for right analog stick (digital up)
+        "input_player1_analog_r_right": "m",  # Placeholder for right analog stick (digital down)
+        "input_player1_analog_r_up": ",",  # Placeholder for right analog stick (digital left)
+        "input_player1_analog_r_down": ".",  # Placeholder for right analog stick (digital right)
     },
     "Nintendo 64": {
         "input_player1_a": "j",
@@ -61,7 +61,7 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_left": "a",
         "input_player1_right": "d",
         "input_player1_fire": "j",
-        "input_player1_fire2": "k", # Assuming a second fire button exists on some controllers/games
+        "input_player1_fire2": "k",  # Assuming a second fire button exists on some controllers/games
         "input_player1_select": "rshift",
         "input_player1_start": "enter",
     },
@@ -142,12 +142,12 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_r": "e",
         "input_player1_start": "enter",
         "input_player1_select": "rshift",
-        "input_player1_zl": "z", # Assuming ZL can be mapped to a keyboard key
-        "input_player1_zr": "x", # Assuming ZR can be mapped to a keyboard key
-        "input_player1_c_up": "8",   # Placeholder for Circle Pad
-        "input_player1_c_down": "2", # Placeholder for Circle Pad
-        "input_player1_c_left": "4", # Placeholder for Circle Pad
-        "input_player1_c_right": "6",# Placeholder for Circle Pad
+        "input_player1_zl": "z",  # Assuming ZL can be mapped to a keyboard key
+        "input_player1_zr": "x",  # Assuming ZR can be mapped to a keyboard key
+        "input_player1_c_up": "8",  # Placeholder for Circle Pad
+        "input_player1_c_down": "2",  # Placeholder for Circle Pad
+        "input_player1_c_left": "4",  # Placeholder for Circle Pad
+        "input_player1_c_right": "6",  # Placeholder for Circle Pad
     },
     "Nintendo GameCube": {
         "input_player1_up": "w",
@@ -162,14 +162,14 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_r": "e",
         "input_player1_z": "v",
         "input_player1_start": "enter",
-        "input_player1_analog_left": "n", # Placeholder for Left Analog Stick
-        "input_player1_analog_right": "m",# Placeholder for Left Analog Stick
+        "input_player1_analog_left": "n",  # Placeholder for Left Analog Stick
+        "input_player1_analog_right": "m",  # Placeholder for Left Analog Stick
         "input_player1_analog_up": ",",  # Placeholder for Left Analog Stick
-        "input_player1_analog_down": ".",# Placeholder for Left Analog Stick
-        "input_player1_c_up": "8",        # Placeholder for C-Stick
-        "input_player1_c_down": "2",      # Placeholder for C-Stick
-        "input_player1_c_left": "4",      # Placeholder for C-Stick
-        "input_player1_c_right": "6",     # Placeholder for C-Stick
+        "input_player1_analog_down": ".",  # Placeholder for Left Analog Stick
+        "input_player1_c_up": "8",  # Placeholder for C-Stick
+        "input_player1_c_down": "2",  # Placeholder for C-Stick
+        "input_player1_c_left": "4",  # Placeholder for C-Stick
+        "input_player1_c_right": "6",  # Placeholder for C-Stick
         "input_player1_dpad_up": "up",
         "input_player1_dpad_down": "down",
         "input_player1_dpad_left": "left",
@@ -187,8 +187,8 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_home": "h",
         "input_player1_1": "1",
         "input_player1_2": "2",
-        "input_player1_c": "n", # Placeholder for Nunchuk C button
-        "input_player1_z": "m", # Placeholder for Nunchuk Z button
+        "input_player1_c": "n",  # Placeholder for Nunchuk C button
+        "input_player1_z": "m",  # Placeholder for Nunchuk Z button
         # Wii Remote specific buttons (assuming horizontal orientation for simplicity)
         "input_player1_dpad_up": "w",
         "input_player1_dpad_down": "s",
@@ -210,16 +210,16 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_down": "down",
         "input_player1_left": "left",
         "input_player1_right": "right",
-        "input_player1_l3": "v", # Left analog click
-        "input_player1_r3": "b", # Right analog click
-        "input_player1_analog_left": "n", # Left analog stick - Left
-        "input_player1_analog_right": "m", # Left analog stick - Right
-        "input_player1_analog_up": ",",   # Left analog stick - Up
-        "input_player1_analog_down": ".", # Left analog stick - Down
-        "input_player1_analog_r_left": "i", # Right analog stick - Left
-        "input_player1_analog_r_right": "o", # Right analog stick - Right
-        "input_player1_analog_r_up": "p",   # Right analog stick - Up
-        "input_player1_analog_r_down": "[", # Right analog stick - Down
+        "input_player1_l3": "v",  # Left analog click
+        "input_player1_r3": "b",  # Right analog click
+        "input_player1_analog_left": "n",  # Left analog stick - Left
+        "input_player1_analog_right": "m",  # Left analog stick - Right
+        "input_player1_analog_up": ",",  # Left analog stick - Up
+        "input_player1_analog_down": ".",  # Left analog stick - Down
+        "input_player1_analog_r_left": "i",  # Right analog stick - Left
+        "input_player1_analog_r_right": "o",  # Right analog stick - Right
+        "input_player1_analog_r_up": "p",  # Right analog stick - Up
+        "input_player1_analog_r_down": "[",  # Right analog stick - Down
     },
     "Sony PlayStation Portable": {
         "input_player1_cross": "x",
@@ -264,6 +264,6 @@ CONSOLE_KEYBINDINGS = {
         "input_player1_analog_r_right": "o",
         "input_player1_analog_r_up": "p",
         "input_player1_analog_r_down": "[",
-        "input_player1_ps": "home", # Assuming a "home" key exists or can be mapped
+        "input_player1_ps": "home",  # Assuming a "home" key exists or can be mapped
     },
 }

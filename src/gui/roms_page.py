@@ -1,9 +1,17 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-                               QProgressBar, QListWidget, QGroupBox,
-                               QScrollArea)
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QListWidget,
+    QGroupBox,
+    QScrollArea,
+)
 from PySide6.QtCore import Qt
 from src.gui.download_queue_item import DownloadQueueItemWidget
 import logging
+
 
 class RomsPage(QWidget):
     """
@@ -12,6 +20,7 @@ class RomsPage(QWidget):
     Corrected version maintaining the embellished structure but using
     the original (working) logic for adding/removing active widgets.
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.active_widgets = {}
@@ -83,7 +92,6 @@ class RomsPage(QWidget):
 
         main_layout.addLayout(lists_layout)
 
-
     def add_active_download(self, game_name):
         """
         Creates and adds a widget for a new active download,
@@ -102,30 +110,33 @@ class RomsPage(QWidget):
         logging.debug(f"RomsPage: Active widget for {game_name} already exists.")
         return widget
 
-
     def update_active_download(self, game_name, percent):
         """Updates the progress bar of the specified active widget."""
         widget = self.active_widgets.get(game_name)
         if widget:
-            if hasattr(widget, 'update_progress'):
+            if hasattr(widget, "update_progress"):
                 widget.update_progress(percent)
             else:
-                 logging.warning(f"Widget for {game_name} does not have 'update_progress' method.")
-
+                logging.warning(
+                    f"Widget for {game_name} does not have 'update_progress' method."
+                )
 
     def update_active_stats(self, game_name, speed_mb, peak_mb):
         """Updates the statistics (speed, peak) of the specified active widget."""
         widget = self.active_widgets.get(game_name)
         if widget:
-             if hasattr(widget, 'update_stats'):
+            if hasattr(widget, "update_stats"):
                 try:
                     widget.update_stats(float(speed_mb), float(peak_mb))
                 except (ValueError, TypeError):
-                    logging.warning(f"Invalid stats values for {game_name}: speed={speed_mb}, peak={peak_mb}")
+                    logging.warning(
+                        f"Invalid stats values for {game_name}: speed={speed_mb}, peak={peak_mb}"
+                    )
                     widget.update_stats(0.0, 0.0)
-             else:
-                 logging.warning(f"Widget for {game_name} does not have 'update_stats' method.")
-
+            else:
+                logging.warning(
+                    f"Widget for {game_name} does not have 'update_stats' method."
+                )
 
     def remove_active_download(self, game_name):
         """
@@ -138,10 +149,13 @@ class RomsPage(QWidget):
             try:
                 widget.setParent(None)
                 widget.deleteLater()
-                logging.debug(f"RomsPage: Widget for {game_name} removed and scheduled for deleteLater.")
+                logging.debug(
+                    f"RomsPage: Widget for {game_name} removed and scheduled for deleteLater."
+                )
             except Exception as e:
-                logging.error(f"Error during removal/deletion of widget for {game_name}: {e}")
-
+                logging.error(
+                    f"Error during removal/deletion of widget for {game_name}: {e}"
+                )
 
     def add_to_queue(self, game_name):
         """Adds a game name to the visual queue list."""
@@ -160,7 +174,9 @@ class RomsPage(QWidget):
         self.completed_list.addItem(game_name_with_info)
         self.completed_list.scrollToBottom()
 
-    def update_global_progress(self, downloaded, total, global_speed_mb, global_peak_mb):
+    def update_global_progress(
+        self, downloaded, total, global_speed_mb, global_peak_mb
+    ):
         """
         Updates the global progress bar and global statistics labels.
         Speed and peak are expected in MB/s.
@@ -170,9 +186,11 @@ class RomsPage(QWidget):
         self.global_progress_bar.setValue(percent)
 
         try:
-             speed_str = f"{float(global_speed_mb):.1f} MB/s"
-             peak_str = f"{float(global_peak_mb):.1f} MB/s"
+            speed_str = f"{float(global_speed_mb):.1f} MB/s"
+            peak_str = f"{float(global_peak_mb):.1f} MB/s"
         except (ValueError, TypeError):
-             speed_str = "N/A"
-             peak_str = "N/A"
-        self.global_stats_label.setText(f"Velocità Globale: {speed_str}, Picco Globale: {peak_str}")
+            speed_str = "N/A"
+            peak_str = "N/A"
+        self.global_stats_label.setText(
+            f"Velocità Globale: {speed_str}, Picco Globale: {peak_str}"
+        )

@@ -39,6 +39,5 @@ DEFAULT_KEYBINDINGS = {
     "input_toggle_fast_forward": "+",
     "input_toggle_fullscreen": "f",
     "input_volume_down": "subtract",
-    "input_volume_up": "add"
+    "input_volume_up": "add",
 }
-

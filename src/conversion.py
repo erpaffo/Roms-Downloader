@@ -25,6 +25,7 @@ KEY_MAPPING = {
     "arrow": "home",
 }
 
+
 def convert_binding(key: str) -> str:
     """
     Confronta in lowercase e restituisce il valore mappato se presente,

@@ -4,6 +4,7 @@ from PySide6.QtGui import QKeyEvent, QKeySequence
 from src.conversion import convert_binding
 import logging
 
+
 class HotkeyInput(QLineEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -31,26 +32,36 @@ class HotkeyInput(QLineEdit):
             key = event.key()
             modifiers = event.modifiers()
 
-            if key in (Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt, Qt.Key.Key_Meta, Qt.Key.Key_unknown):
-                 self.setPlaceholderText("Tasto non valido")
-                 return
+            if key in (
+                Qt.Key.Key_Control,
+                Qt.Key.Key_Shift,
+                Qt.Key.Key_Alt,
+                Qt.Key.Key_Meta,
+                Qt.Key.Key_unknown,
+            ):
+                self.setPlaceholderText("Tasto non valido")
+                return
 
             key_text = event.text().lower()
             if not key_text or key < Qt.Key.Key_Space or key > Qt.Key.Key_ydiaeresis:
-                 seq = QKeySequence(key)
-                 key_text = seq.toString(QKeySequence.SequenceFormat.NativeText).lower()
-                 if '+' in key_text:
-                      key_text = key_text.split('+')[-1]
+                seq = QKeySequence(key)
+                key_text = seq.toString(QKeySequence.SequenceFormat.NativeText).lower()
+                if "+" in key_text:
+                    key_text = key_text.split("+")[-1]
 
             mod_list = []
-            if modifiers & Qt.KeyboardModifier.ControlModifier: mod_list.append("ctrl")
-            if modifiers & Qt.KeyboardModifier.AltModifier: mod_list.append("alt")
-            if modifiers & Qt.KeyboardModifier.ShiftModifier: mod_list.append("shift")
-            if modifiers & Qt.KeyboardModifier.MetaModifier: mod_list.append("meta")
+            if modifiers & Qt.KeyboardModifier.ControlModifier:
+                mod_list.append("ctrl")
+            if modifiers & Qt.KeyboardModifier.AltModifier:
+                mod_list.append("alt")
+            if modifiers & Qt.KeyboardModifier.ShiftModifier:
+                mod_list.append("shift")
+            if modifiers & Qt.KeyboardModifier.MetaModifier:
+                mod_list.append("meta")
 
             if not key_text:
-                 logging.warning("HotkeyInput.keyPressEvent: key_text vuoto.")
-                 return
+                logging.warning("HotkeyInput.keyPressEvent: key_text vuoto.")
+                return
 
             converted_key = convert_binding(key_text)
 
@@ -70,7 +81,7 @@ class HotkeyInput(QLineEdit):
 
     def focusOutEvent(self, event):
         if self.recording:
-             self.timer.stop()
-             self.recording = False
-             self.setPlaceholderText("Annullato! Clicca")
+            self.timer.stop()
+            self.recording = False
+            self.setPlaceholderText("Annullato! Clicca")
         super().focusOutEvent(event)
