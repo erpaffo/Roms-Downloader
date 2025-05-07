@@ -1,7 +1,8 @@
-import re
 import logging
-from PySide6.QtWidgets import QTableWidgetItem
+import re
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTableWidgetItem
 
 
 class WeightItem(QTableWidgetItem):

@@ -1,10 +1,11 @@
 import os
 import time
+
 import requests
 from PySide6.QtCore import QObject, Signal
 
-from src.utils import extract_zip
 from src.config import USER_DOWNLOADS_FOLDER
+from src.utils import extract_zip
 
 
 class DownloadWorker(QObject):

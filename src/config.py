@@ -1,7 +1,8 @@
 import logging
 import os
-import sys
 import shutil
+import sys
+
 from PySide6.QtCore import QSettings
 
 try:

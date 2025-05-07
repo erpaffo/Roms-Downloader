@@ -1,11 +1,13 @@
-import os
 import json
 import logging
-import requests
-import shutil
+import os
 import re
+import shutil
 from datetime import datetime, timezone
-from src.config import METADATA_FOLDER, COVERS_FOLDER
+
+import requests
+
+from src.config import COVERS_FOLDER, METADATA_FOLDER
 from src.utils import clean_rom_title
 
 

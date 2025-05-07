@@ -1,53 +1,31 @@
-import os
 import logging
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QComboBox,
-    QLineEdit,
-    QHeaderView,
-    QTableWidget,
-    QTableWidgetItem,
-    QPushButton,
-    QLabel,
-    QPlainTextEdit,
-    QListWidget,
-    QListWidgetItem,
-    QProgressBar,
-    QSizePolicy,
-    QSplitter,
-    QStackedWidget,
-    QMessageBox,
-    QInputDialog,
-    QMenuBar,
-    QMenu,
-    QApplication,
-)
+import os
+
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction
-from src.gui.roms_page import RomsPage
-from src.config import (
-    CONSOLES,
-    DEFAULT_THEME_FILENAME,
-    EMULATOR_CONFIG_FOLDER,
-    STYLES_REL_PATH,
-    USER_DOWNLOADS_FOLDER,
-    resource_path,
-    set_user_download_folder,
-    set_max_concurrent_downloads,
-    settings,
-    MAX_CONCURRENT_DOWNLOADS,
-)
-from src.workers.scrape_worker import ScrapeWorker
-from src.workers.download_manager import DownloadManager
-from src.gui.download_queue_item import DownloadQueueItemWidget
-from src.utils import extract_nations, ALLOWED_NATIONS
-from src.gui.settings_dialog import SettingsDialog
-from src.gui.library_page import LibraryPage
-from src.gui.weight_item import WeightItem
+from PySide6.QtWidgets import (QApplication, QComboBox, QHBoxLayout,
+                               QHeaderView, QInputDialog, QLabel, QLineEdit,
+                               QListWidget, QListWidgetItem, QMenu, QMenuBar,
+                               QMessageBox, QPlainTextEdit, QProgressBar,
+                               QPushButton, QSizePolicy, QSplitter,
+                               QStackedWidget, QTableWidget, QTableWidgetItem,
+                               QVBoxLayout, QWidget)
+
+from src.config import (CONSOLES, DEFAULT_THEME_FILENAME,
+                        EMULATOR_CONFIG_FOLDER, MAX_CONCURRENT_DOWNLOADS,
+                        STYLES_REL_PATH, USER_DOWNLOADS_FOLDER, resource_path,
+                        set_max_concurrent_downloads, set_user_download_folder,
+                        settings)
 from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.gui.controls_page import ControlsPage
+from src.gui.download_queue_item import DownloadQueueItemWidget
+from src.gui.library_page import LibraryPage
+from src.gui.roms_page import RomsPage
+from src.gui.settings_dialog import SettingsDialog
+from src.gui.weight_item import WeightItem
+from src.utils import ALLOWED_NATIONS, extract_nations
+from src.workers.download_manager import DownloadManager
+from src.workers.scrape_worker import ScrapeWorker
 
 
 class MainWindow(QWidget):

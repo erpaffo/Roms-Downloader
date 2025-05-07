@@ -1,8 +1,9 @@
 import logging
-from PySide6.QtCore import QObject, Signal, QThread
-from src.workers.download_worker import (
-    DownloadWorker,
-)  # Assuming this import exists at the top or is handled elsewhere
+
+from PySide6.QtCore import QObject, QThread, Signal
+
+from src.workers.download_worker import \
+    DownloadWorker  # Assuming this import exists at the top or is handled elsewhere
 
 
 class DownloadManager(QObject):

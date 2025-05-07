@@ -1,43 +1,24 @@
+import logging
 import os
 import subprocess
-import logging
 from datetime import datetime, timezone
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QTreeWidget,
-    QHeaderView,
-    QTreeWidgetItem,
-    QMessageBox,
-    QApplication,
-    QDialog,
-)
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QPixmap
 
-from src.utils import create_default_core_config, find_retroarch, clean_rom_title
-from src.config import (
-    USER_CONFIG_DIR,
-    settings,
-    DEFAULT_DOWNLOADS_FOLDER,
-    USER_DOWNLOADS_FOLDER,
-    CORES_FOLDER,
-    DEFAULT_CORES,
-    CORE_EXT,
-    EMULATOR_CONFIG_FOLDER,
-)
-from src.scraping import fetch_game_details
-from src.metadata_manager import (
-    load_metadata,
-    save_metadata,
-    download_cover,
-    create_placeholder_metadata,
-    delete_metadata_and_cover,
-)
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtWidgets import (QApplication, QDialog, QHBoxLayout, QHeaderView,
+                               QLabel, QMessageBox, QPushButton, QTreeWidget,
+                               QTreeWidgetItem, QVBoxLayout, QWidget)
+
+from src.config import (CORE_EXT, CORES_FOLDER, DEFAULT_CORES,
+                        DEFAULT_DOWNLOADS_FOLDER, EMULATOR_CONFIG_FOLDER,
+                        USER_CONFIG_DIR, USER_DOWNLOADS_FOLDER, settings)
 from src.gui.game_info_dialog import GameInfoDialog
+from src.metadata_manager import (create_placeholder_metadata,
+                                  delete_metadata_and_cover, download_cover,
+                                  load_metadata, save_metadata)
+from src.scraping import fetch_game_details
+from src.utils import (clean_rom_title, create_default_core_config,
+                       find_retroarch)
 
 
 class LibraryPage(QWidget):

@@ -1,8 +1,10 @@
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QKeyEvent, QKeySequence
-from src.conversion import convert_binding
 import logging
+
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtWidgets import QLineEdit
+
+from src.conversion import convert_binding
 
 
 class HotkeyInput(QLineEdit):

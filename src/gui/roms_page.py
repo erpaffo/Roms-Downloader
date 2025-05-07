@@ -1,16 +1,10 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QProgressBar,
-    QListWidget,
-    QGroupBox,
-    QScrollArea,
-)
-from PySide6.QtCore import Qt
-from src.gui.download_queue_item import DownloadQueueItemWidget
 import logging
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QGroupBox, QHBoxLayout, QLabel, QListWidget,
+                               QProgressBar, QScrollArea, QVBoxLayout, QWidget)
+
+from src.gui.download_queue_item import DownloadQueueItemWidget
 
 
 class RomsPage(QWidget):

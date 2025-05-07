@@ -1,35 +1,20 @@
-import os
 import logging
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QGridLayout,
-    QFormLayout,
-    QComboBox,
-    QLineEdit,
-    QScrollArea,
-    QGroupBox,
-    QMessageBox,
-    QSizePolicy,
-    QFileDialog,
-    QTabWidget,
-    QCheckBox,
-)
+import os
+
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFormLayout,
+                               QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+                               QLineEdit, QMessageBox, QPushButton,
+                               QScrollArea, QSizePolicy, QTabWidget,
+                               QVBoxLayout, QWidget)
+
+from src.config import (CORE_SETTINGS_DEFAULTS, DEFAULT_CORES,
+                        EMULATOR_CONFIG_FOLDER, get_save_directory)
 from src.console_keybindings import CONSOLE_KEYBINDINGS
-from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.conversion import convert_binding
+from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.utils import update_emulator_config
-from src.config import (
-    CORE_SETTINGS_DEFAULTS,
-    EMULATOR_CONFIG_FOLDER,
-    DEFAULT_CORES,
-    get_save_directory,
-)
 
 PRETTY_LABELS = {
     "input_player1_a": "A",
@@ -609,10 +594,8 @@ class ControlsPage(QWidget):
         default_save_path = ""
         if self.current_console:
             try:
-                from src.config import (
-                    get_save_directory,
-                    SYSTEM_FOLDER,
-                )  # Importa SYSTEM_FOLDER qui
+                from src.config import (  # Importa SYSTEM_FOLDER qui
+                    SYSTEM_FOLDER, get_save_directory)
 
                 default_save_path = get_save_directory(self.current_console)
             except ImportError:

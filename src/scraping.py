@@ -1,16 +1,17 @@
-from datetime import datetime
-import os
 import json
-import requests
+import logging
+import os
 import time
+from datetime import datetime
+from urllib.parse import unquote, urljoin
+
+import requests
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
-from urllib.parse import urljoin, unquote
-from src.config import BASE_URL, CONSOLES
-import logging
-from src.config import BASE_URL, CONSOLES, CACHE_FOLDER
+
+from src.config import BASE_URL, CACHE_FOLDER, CONSOLES
+from src.mapping import apply_title_term_map, simplify_title
 from src.utils import clean_rom_title
-from src.mapping import simplify_title, apply_title_term_map
 
 
 def get_console_url(console_name):
