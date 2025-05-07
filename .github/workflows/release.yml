@@ -52,6 +52,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install setuptools wheel # Necessari per PyInstaller
+        pip install pyinstaller
 
     # --- Installazione Dipendenze OS specifiche ---
     - name: Install macOS dependencies (create-dmg)
@@ -199,7 +200,7 @@ jobs:
         VERSION_TAG="${{ github.ref_name }}"
         VERSION=${VERSION_TAG#v} # Rimuove 'v' iniziale
         DEB_ARCH="amd64" # Assumendo build a 64bit
-        MAINTAINER="erpaffo <tuo_email@example.com>" # CAMBIA EMAIL
+        MAINTAINER="erpaffo"
         DESCRIPTION="Un'applicazione per cercare, scaricare e gestire ROMs."
         DEB_BUILD_DIR="build/debian/${PKG_NAME}"
         DIST_DIR="dist"
@@ -285,7 +286,7 @@ jobs:
         PKG_NAME="romsdownloader"
         VERSION_TAG="${{ github.ref_name }}"
         VERSION=${VERSION_TAG#v} # Rimuove 'v'
-        MAINTAINER="erpaffo <tuo_email@example.com>" # CAMBIA EMAIL
+        MAINTAINER="erpaffo" 
         GITHUB_WORKSPACE="${{ github.workspace }}"
         DIST_DIR="dist" # Directory dove PyInstaller ha costruito l'app
         ARCH_BUILD_DIR="build/arch" # Directory locale per i file di build Arch

@@ -3,14 +3,31 @@ import os
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeyEvent, QKeySequence
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFormLayout,
-                               QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-                               QLineEdit, QMessageBox, QPushButton,
-                               QScrollArea, QSizePolicy, QTabWidget,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QFormLayout,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-from src.config import (CORE_SETTINGS_DEFAULTS, DEFAULT_CORES,
-                        EMULATOR_CONFIG_FOLDER, get_save_directory)
+from src.config import (
+    CORE_SETTINGS_DEFAULTS,
+    DEFAULT_CORES,
+    EMULATOR_CONFIG_FOLDER,
+    get_save_directory,
+)
 from src.console_keybindings import CONSOLE_KEYBINDINGS
 from src.conversion import convert_binding
 from src.default_keybindings import DEFAULT_KEYBINDINGS
@@ -595,7 +612,9 @@ class ControlsPage(QWidget):
         if self.current_console:
             try:
                 from src.config import (  # Importa SYSTEM_FOLDER qui
-                    SYSTEM_FOLDER, get_save_directory)
+                    SYSTEM_FOLDER,
+                    get_save_directory,
+                )
 
                 default_save_path = get_save_directory(self.current_console)
             except ImportError:

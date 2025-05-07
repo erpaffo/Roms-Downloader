@@ -6,8 +6,12 @@ import sys
 import zipfile
 from urllib.parse import unquote
 
-from src.config import (CORE_SETTINGS_DEFAULTS, RETROARCH_EXTRACT_FOLDER,
-                        SYSTEM_FOLDER, get_save_directory)
+from src.config import (
+    CORE_SETTINGS_DEFAULTS,
+    RETROARCH_EXTRACT_FOLDER,
+    SYSTEM_FOLDER,
+    get_save_directory,
+)
 from src.console_keybindings import CONSOLE_KEYBINDINGS
 from src.conversion import convert_binding
 from src.default_keybindings import DEFAULT_KEYBINDINGS

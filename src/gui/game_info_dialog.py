@@ -5,14 +5,29 @@ import shutil
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QGroupBox,
-                               QHBoxLayout, QLabel, QLineEdit, QMessageBox,
-                               QPushButton, QScrollArea, QSizePolicy,
-                               QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from src.config import COVERS_FOLDER
-from src.metadata_manager import (delete_metadata_and_cover, get_metadata_path,
-                                  save_metadata)
+from src.metadata_manager import (
+    delete_metadata_and_cover,
+    get_metadata_path,
+    save_metadata,
+)
 
 
 class GameInfoDialog(QDialog):

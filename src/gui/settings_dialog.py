@@ -3,15 +3,34 @@ import os
 
 from PySide6.QtCore import QSettings, Qt  # Aggiunto QSettings
 from PySide6.QtWidgets import (  # Aggiunto QComboBox, QApplication
-    QApplication, QComboBox, QDialog, QFileDialog, QFormLayout, QGroupBox,
-    QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QSpinBox,
-    QVBoxLayout)
+    QApplication,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+)
 
 from src.config import resource_path  # Aggiunto resource_path
-from src.config import (CONSOLES, DEFAULT_THEME_FILENAME,
-                        MAX_CONCURRENT_DOWNLOADS, SETTINGS_APP, SETTINGS_ORG,
-                        STYLES_REL_PATH, USER_DOWNLOADS_FOLDER, add_console,
-                        set_max_concurrent_downloads, set_user_download_folder)
+from src.config import (
+    CONSOLES,
+    DEFAULT_THEME_FILENAME,
+    MAX_CONCURRENT_DOWNLOADS,
+    SETTINGS_APP,
+    SETTINGS_ORG,
+    STYLES_REL_PATH,
+    USER_DOWNLOADS_FOLDER,
+    add_console,
+    set_max_concurrent_downloads,
+    set_user_download_folder,
+)
 
 
 class SettingsDialog(QDialog):

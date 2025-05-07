@@ -3,19 +3,43 @@ import os
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QApplication, QComboBox, QHBoxLayout,
-                               QHeaderView, QInputDialog, QLabel, QLineEdit,
-                               QListWidget, QListWidgetItem, QMenu, QMenuBar,
-                               QMessageBox, QPlainTextEdit, QProgressBar,
-                               QPushButton, QSizePolicy, QSplitter,
-                               QStackedWidget, QTableWidget, QTableWidgetItem,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QHBoxLayout,
+    QHeaderView,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QMenuBar,
+    QMessageBox,
+    QPlainTextEdit,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
-from src.config import (CONSOLES, DEFAULT_THEME_FILENAME,
-                        EMULATOR_CONFIG_FOLDER, MAX_CONCURRENT_DOWNLOADS,
-                        STYLES_REL_PATH, USER_DOWNLOADS_FOLDER, resource_path,
-                        set_max_concurrent_downloads, set_user_download_folder,
-                        settings)
+from src.config import (
+    CONSOLES,
+    DEFAULT_THEME_FILENAME,
+    EMULATOR_CONFIG_FOLDER,
+    MAX_CONCURRENT_DOWNLOADS,
+    STYLES_REL_PATH,
+    USER_DOWNLOADS_FOLDER,
+    resource_path,
+    set_max_concurrent_downloads,
+    set_user_download_folder,
+    settings,
+)
 from src.default_keybindings import DEFAULT_KEYBINDINGS
 from src.gui.controls_page import ControlsPage
 from src.gui.download_queue_item import DownloadQueueItemWidget
