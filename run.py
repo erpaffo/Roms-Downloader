@@ -12,9 +12,11 @@ logging.info("Variabili d'ambiente caricate da .env (se trovato).")
 
 from src.gui.main_window import MainWindow
 
+
 def handle_sigint(*args):
     logging.warning("Ricevuto segnale SIGINT (Ctrl+C), chiusura applicazione...")
     QApplication.quit()
+
 
 def main():
     signal.signal(signal.SIGINT, handle_sigint)
@@ -30,6 +32,9 @@ def main():
     window.show()
     sys.exit(app.exec())
 
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     main()
